@@ -31,4 +31,6 @@
 *.out
 *.app
 
+#Folders
 build/
+data/
