@@ -45,7 +45,6 @@ void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event
 void BNView::PointPickingCallbackEventHandler(const pcl::visualization::PointPickingEvent& event, void* cookie)
 {
     cout << "Point Picking Event Occured" << endl;
-  //  VisualiseRawCloud();
 }
 
 void BNView::RegisterHandlers()
@@ -95,6 +94,20 @@ void BNView::InitView()
     {
         m_viewer->spinOnce (1);
     }
+}
 
+void BNView::AnnotationCLI()
+{
+    //siddhant: This can be a separate class I guess. Again, ain't nobody got time for good code in research?
+    cout << "Welcome to the annotation interface. To annotate, type in a class name. All clusters you select will then be labelled as that class" << endl;
+    cout << "When you are done, press q" << endl;
 
+    //TODO: Siddhantto
+    /*
+        Run a while loop waiting for user input, unless input is q.
+        deregister keyboard events (may not be trivial)
+        Whatever user writes down as class name, associate cluster with that class name
+        Eventually, we will figure out how to serialise the map and write down to JSON or something so that the deep learning
+        code can take it up as an input 
+    */
 }

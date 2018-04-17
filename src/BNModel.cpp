@@ -58,3 +58,11 @@ void BNModel::SetState(std::string inState)
 
     m_state.SetState(inState);
 }
+int BNModel::GetAnnotationClass()
+{
+    return m_annotationClassNum;
+}
+void BNModel::SetAnnotationClass(int inClass)
+{
+    m_annotationClassNum = inClass;
+}
