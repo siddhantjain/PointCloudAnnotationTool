@@ -8,15 +8,15 @@ m_model(inModel)
 }
 void BNView::RefreshStateView()
 {
+
     //siddhant: This is a sad shortcut. What we ideally want is the state machine to pass a message that viewer subscribes
     // this message will be published everytime state changes. Alas, ain't nobody got time for that
-    if(!m_viewer->updateText("change",10, 10,255,255,0,"StateText"))
+    if(!m_viewer->updateText(m_model.GetState(),10, 10,40,1.0,1.0,0,"StateText"))
     {
         cout << "Trying to add text" << endl;
         bool isSuccesful = m_viewer->addText(m_model.GetState(),10, 10, 40, 1.0,1.0,0,"StateText");   
         cout << "Adding text succesful? " << isSuccesful << endl;
-    }
-           
+    }      
 
 }
 void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event, void* cookie)
