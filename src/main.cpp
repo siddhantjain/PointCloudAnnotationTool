@@ -3,6 +3,7 @@
 #include "includes/BNModel.h"
 #include "includes/BNView.h"
 #include "includes/BNSegmentator.h"
+#include "includes/BNState.h"
 //New includes end
 
 #include "includes/common.h"
@@ -19,7 +20,7 @@ bool InitView(BNView& inView, BNModel& inModel)
     return true;
 }
 
-bool InitModel(BNModel& inModel, string PCFileName)
+bool InitModel(BNModel& inModel, std::string PCFileName)
 {
     //std::string PCFileName = "../data/93.pcd";
     cout << "Initialising Model" << endl;
@@ -44,11 +45,11 @@ bool InitModel(BNModel& inModel, string PCFileName)
 int main (int argc, char** argv)
 {
     cout << "Welcome to our point cloud annotation tool. As of now, a new window will open where you can manipulate the point cloud. All messages will be shown in this video" << endl;
-    
-    BNModel toolModel;
+    BNState toolStateMachine;
+    BNModel toolModel(toolStateMachine);
     BNView toolView(toolModel);
 
-    if(!InitModel(toolModel))
+    if(!InitModel(toolModel,"../data/learn17.pcd"))
     {
       return -1;
     }

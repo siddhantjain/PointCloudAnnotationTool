@@ -6,12 +6,40 @@ m_model(inModel)
 {
     std::cout << "View Created" << std::endl;
 }
+void BNView::RefreshStateView()
+{
+    //siddhant: This is a sad shortcut. What we ideally want is the state machine to pass a message that viewer subscribes
+    // this message will be published everytime state changes. Alas, ain't nobody got time for that
+    if(!m_viewer->updateText("change",10, 10,255,255,0,"StateText"))
+    {
+        cout << "Trying to add text" << endl;
+        bool isSuccesful = m_viewer->addText(m_model.GetState(),10, 10, 40, 1.0,1.0,0,"StateText");   
+        cout << "Adding text succesful? " << isSuccesful << endl;
+    }
+           
 
+}
 void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event, void* cookie)
 {
     cout << "Keyboard event occurred" << endl;
-    //BNView::VisualiseLabelledCloud();
-    VisualiseSegmentedPointCloud();
+ 
+    if (event.getKeySym () == "a" && event.keyDown ())
+    {   
+        m_model.SetState("Annotate");
+        VisualiseSegmentedPointCloud();
+    }
+    if (event.getKeySym () == "r" && event.keyDown ())
+    {   
+        m_model.SetState("Raw Point Cloud");
+        VisualiseRawCloud();
+    }
+    if (event.getKeySym () == "c" && event.keyDown ())
+    {   
+        m_model.SetState("Current Labelled Cloud");
+        VisualiseLabelledCloud();
+    }
+
+    RefreshStateView();
 }
 
 void BNView::PointPickingCallbackEventHandler(const pcl::visualization::PointPickingEvent& event, void* cookie)
@@ -61,6 +89,7 @@ void BNView::InitView()
     m_viewer->initCameraParameters ();
 
     RegisterHandlers();
+    RefreshStateView();
 
     while (!m_viewer->wasStopped ())
     {

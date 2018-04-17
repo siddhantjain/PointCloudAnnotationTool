@@ -1,6 +1,7 @@
 #include "includes/BNModel.h"
 
-BNModel::BNModel()
+BNModel::BNModel(BNState& inState):
+m_state(inState)
 {
     std::cout << "Model Created" << std::endl;
 }
@@ -46,4 +47,14 @@ void BNModel::SetSegmentedPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inSP
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr BNModel::GetSegmentedPointCloud()
 {
     return m_segmentedPointCloud;
+}
+std::string BNModel::GetState()
+{
+
+    return m_state.GetState();
+}
+void BNModel::SetState(std::string inState)
+{
+
+    m_state.SetState(inState);
 }

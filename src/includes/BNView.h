@@ -16,4 +16,5 @@ private:
 	void RegisterHandlers();
 	void KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event, void* cookie);
 	void PointPickingCallbackEventHandler(const pcl::visualization::PointPickingEvent& event, void* cookie);
+	void RefreshStateView();
 };
