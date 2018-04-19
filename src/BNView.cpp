@@ -7,6 +7,26 @@ m_segmentator(inSegmentator)
 {
     std::cout << "View Created" << std::endl;
 }
+
+void DisplayAllLabelNames(boost::shared_ptr<pcl::visualization::PCLVisualizer> inViewer, BNLabelStore& inLabelStore)
+{
+    std::vector<BNLabel>& modelLabels = inLabelStore.GetLabels();
+
+    for(int i=0;i<modelLabels.size();i++)
+    {
+        std::string ClassName = "Label: " + modelLabels[i].m_labelName + "( " + std::to_string(i) + " )";
+        cout << "Displaying: " << ClassName << endl;
+        BNLabelColor classColor = modelLabels[i].m_color;
+        uint fontSize = 20;
+        uint posX = 10;
+        uint posY = 800 - i*(fontSize+5);
+        if(!inViewer->updateText(ClassName,posX, posY,10,classColor.red/255.0,classColor.green/255.0,classColor.blue/255.0,ClassName))
+        {
+            
+            inViewer->addText(ClassName,posX, posY, 10, classColor.red/255.0,classColor.green/255.0,classColor.blue/255.0,ClassName);   
+        }
+    }
+}
 void BNView::RefreshStateView()
 {
 
@@ -15,58 +35,55 @@ void BNView::RefreshStateView()
     
     //Also, the location of the labels should be dependent on the screen size (making this portable across screens will be fun, lol)
 
-    if(!m_viewer->updateText(m_model.GetState(),10, 10,40,1.0,1.0,0,"StateText"))
-    {
-        string::string modeLabelText = "Mode: " + m_model.GetState(); 
-        bool isSuccesful = m_viewer->addText(modeLabelText,10, 10, 40, 1.0,1.0,0,"StateText");   
-    }
+    
 
     if (m_model.GetState() == "Annotate" || m_model.GetState() == "Correct" )
     {
+        if(!m_viewer->updateText(m_model.GetState(),10, 10,40,1.0,1.0,0,"StateText"))
+        {
+            std::string modeLabelText = "Mode: " + m_model.GetState();
+            //  m_viewer->updateText("",1000, 10,40,0,0,0,"AnnotationClassText"); 
+            m_viewer->addText(modeLabelText,10, 10, 40, 1.0,1.0,0,"StateText");   
+        }
+
+        DisplayAllLabelNames( m_viewer,m_model.GetLabelStore());
         std::string ClassName = "Class: " + m_model.GetLabelStore().GetNameForLabel(m_model.GetAnnotationClass());
         BNLabelColor classColor = m_model.GetLabelStore().GetColorForLabel(m_model.GetAnnotationClass());
         if(!m_viewer->updateText(ClassName,1000, 10,40,classColor.red/255.0,classColor.green/255.0,classColor.blue/255.0,"AnnotationClassText"))
         {
             
-            bool isSuccesful = m_viewer->addText(ClassName,1200, 10, 40, classColor.red/255.0,classColor.green/255.0,classColor.blue/255.0,"AnnotationClassText");   
+            m_viewer->addText(ClassName,1200, 10, 40, classColor.red/255.0,classColor.green/255.0,classColor.blue/255.0,"AnnotationClassText");   
         }
-    }      
+    } 
+    else
+    {
+        if(!m_viewer->updateText(m_model.GetState(),10, 10,40,1.0,1.0,0,"StateText"))
+        {
+            std::string modeLabelText = "Mode: " + m_model.GetState();
+            //  m_viewer->updateText("",1000, 10,40,0,0,0,"AnnotationClassText"); 
+            m_viewer->addText(modeLabelText,10, 10, 40, 1.0,1.0,0,"StateText");   
+        }
+    }
+ 
 
 }
 void BNView::AnnotationModeKeyEventHandler(const pcl::visualization::KeyboardEvent &event)
 {
     cout << "Annotation Key event handler, key pressed: " << event.getKeySym () << endl;
     //Siddhant: Haha. WTH is this code? Change it ASAP.
-    if (event.getKeySym () == "0")
-    {   
-        m_model.SetAnnotationClass(0);
+    if(event.getKeySym() >= std::to_string(0) && event.getKeySym() < std::to_string(m_model.GetLabelStore().GetLabels().size()))
+    {
+        m_model.SetAnnotationClass(stoi(event.getKeySym()));
     }
-    if (event.getKeySym () == "1")
-    {   
-        m_model.SetAnnotationClass(1);
-    }
-    if (event.getKeySym () == "2")
-    {   
-        m_model.SetAnnotationClass(2);
-    }
-    if (event.getKeySym () == "3" )
-    {   
-
-        m_model.SetAnnotationClass(3);
-    }
-    if (event.getKeySym () == "4" )
-    {   
-
-        m_model.SetAnnotationClass(4);
-    }
-    if (event.getKeySym () == "5" )
-    {   
-
-        m_model.SetAnnotationClass(5);
-    }
+    
     if (event.getKeySym () == "c" )
     {   
         m_model.SetState("Correct");
+    }
+    if (event.getKeySym () == "i" )
+    {   
+        m_model.SetState("Init");
+        VisualiseRawCloud();
     }
 
 

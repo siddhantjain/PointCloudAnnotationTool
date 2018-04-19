@@ -30,7 +30,7 @@ void BNSegmentator::InitSegmentator()
     m_regionGrowingSegmentator.setSearchMethod (tree);
     m_regionGrowingSegmentator.setDistanceThreshold (10);
     m_regionGrowingSegmentator.setPointColorThreshold (6);
-    m_regionGrowingSegmentator.setRegionColorThreshold (5);
+    m_regionGrowingSegmentator.setRegionColorThreshold (2);
     m_regionGrowingSegmentator.setMinClusterSize (600); 
 
     SegmentPointCloud();
@@ -69,12 +69,12 @@ void HandleExistingClusterReference(std::unordered_map<uint,std::vector<uint>>& 
 
     while(startIt!=endIt)
     {
-        std::vector<uint>& clustersIDs = startIt->second;
+        std::vector<uint>& clusterIDs = startIt->second;
         std::vector<uint>::iterator foundValIt;
         foundValIt = std::find(clusterIDs.begin(), clusterIDs.end(),clusterID); 
         if (foundValIt != clusterIDs.end())
         {
-            clusters.erase(foundValIt);
+            clusterIDs.erase(foundValIt);
             return;
         }
 
@@ -169,8 +169,8 @@ void BNSegmentator::UpdateLabelledPointCloud()
             {
                 BNLabelColor labelColor = m_labelStore.GetColorForLabel(startIt->first);
                 labelledCloud->points[clusterPoints.indices[i]].r = labelColor.red;
-                labelledCloud->points[clusterPoints.indices[i]].g = labelColor.blue;
-                labelledCloud->points[clusterPoints.indices[i]].b = labelColor.green;
+                labelledCloud->points[clusterPoints.indices[i]].g = labelColor.green;
+                labelledCloud->points[clusterPoints.indices[i]].b = labelColor.blue;
             }
             clusterStartIt ++;
 
