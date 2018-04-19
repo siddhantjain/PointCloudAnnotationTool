@@ -20,13 +20,15 @@ public:
 private:
 	void InitSegmentator();
 	void SegmentPointCloud();
-	void DoRegionGrowingSegmentation();
+	void DoColorRegionGrowingSegmentation();
+    void DoNormalRegionGrowingSegmentation();
 	void GetClusterFromPoint();
 	uint FindClusterIDFromClusters(pcl::PointIndices inCluster);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_pointCloud;
     BNModel& m_model;
     std::vector <pcl::PointIndices> m_clusters;
-    pcl::RegionGrowingRGB<pcl::PointXYZRGB> m_regionGrowingSegmentator;
+    pcl::RegionGrowingRGB<pcl::PointXYZRGB> m_regionGrowingSegmentatorRGB;
+    pcl::RegionGrowing<pcl::PointXYZRGB,  pcl::Normal> m_regionGrowingSegmentatorN;
     std::unordered_map<uint,std::vector<uint>> m_label2ClusterMap;
     BNLabelStore& m_labelStore;
     pcl::search::KdTree<pcl::PointXYZRGB> m_searchKDTree;

@@ -15,6 +15,13 @@ void BNSegmentator::InitSegmentator()
     pcl::search::Search <pcl::PointXYZRGB>::Ptr tree = boost::shared_ptr<pcl::search::Search<pcl::PointXYZRGB> > (new pcl::search::KdTree<pcl::PointXYZRGB>);
     pcl::IndicesPtr indices (new std::vector <int>);
     pcl::PassThrough<pcl::PointXYZRGB> pass;
+    pcl::PointCloud <pcl::Normal>::Ptr normals (new pcl::PointCloud <pcl::Normal>);
+
+    pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> normal_estimator;
+    normal_estimator.setSearchMethod (tree);
+    normal_estimator.setInputCloud (m_model.GetRawPointCloud());
+    normal_estimator.setKSearch (50);
+    normal_estimator.compute (*normals);
 
     //siddhant: we have two trees in the segmentator right now
     // one of them is mostly redundant. Figure out which one and resolve this stupidity
@@ -25,13 +32,29 @@ void BNSegmentator::InitSegmentator()
     pass.setFilterLimits (0.0, 10.0);
     pass.filter (*indices);
 
-    m_regionGrowingSegmentator.setInputCloud (m_model.GetRawPointCloud());
-    m_regionGrowingSegmentator.setIndices (indices);
-    m_regionGrowingSegmentator.setSearchMethod (tree);
-    m_regionGrowingSegmentator.setDistanceThreshold (10);
-    m_regionGrowingSegmentator.setPointColorThreshold (6);
-    m_regionGrowingSegmentator.setRegionColorThreshold (2);
-    m_regionGrowingSegmentator.setMinClusterSize (600); 
+    m_regionGrowingSegmentatorRGB.setInputCloud (m_model.GetRawPointCloud());
+    m_regionGrowingSegmentatorRGB.setIndices (indices);
+    m_regionGrowingSegmentatorRGB.setSearchMethod (tree);
+    m_regionGrowingSegmentatorRGB.setDistanceThreshold (10);
+    m_regionGrowingSegmentatorRGB.setPointColorThreshold (4);
+    m_regionGrowingSegmentatorRGB.setRegionColorThreshold (1);
+    m_regionGrowingSegmentatorRGB.setMinClusterSize (600); 
+
+  
+
+    
+    m_regionGrowingSegmentatorN.setMinClusterSize (600);
+    m_regionGrowingSegmentatorN.setMaxClusterSize (1000000);
+    m_regionGrowingSegmentatorN.setSearchMethod (tree);
+    m_regionGrowingSegmentatorN.setNumberOfNeighbours (30);
+    m_regionGrowingSegmentatorN.setInputCloud (m_model.GetRawPointCloud());
+      //reg.setIndices (indices);
+    m_regionGrowingSegmentatorN.setInputNormals (normals);
+    m_regionGrowingSegmentatorN.setSmoothnessThreshold (3.0 / 180.0 * M_PI);
+    m_regionGrowingSegmentatorN.setCurvatureThreshold (1.0);
+
+
+
 
     SegmentPointCloud();
 
@@ -46,15 +69,24 @@ void BNSegmentator::InitSegmentator()
 
 void BNSegmentator::SegmentPointCloud()
 {
-    DoRegionGrowingSegmentation();
+    DoColorRegionGrowingSegmentation();
+    //DoNormalRegionGrowingSegmentation();
 }
 
-void BNSegmentator::DoRegionGrowingSegmentation()
+void BNSegmentator::DoColorRegionGrowingSegmentation()
 {
-    cout << "Doing region growing segmentation" << endl;
-    m_regionGrowingSegmentator.extract(m_clusters);
-    m_model.SetSegmentedPointCloud(m_regionGrowingSegmentator.getColoredCloud());
+    cout << "Doing color based region growing segmentation" << endl;
+    m_regionGrowingSegmentatorRGB.extract(m_clusters);
+    m_model.SetSegmentedPointCloud(m_regionGrowingSegmentatorRGB.getColoredCloud());
 }
+
+void BNSegmentator::DoNormalRegionGrowingSegmentation()
+{
+    cout << "Doing normal region growing segmentation" << endl;
+    m_regionGrowingSegmentatorN.extract(m_clusters);
+    m_model.SetSegmentedPointCloud(m_regionGrowingSegmentatorN.getColoredCloud());
+}
+
 
 
 void HandleExistingClusterReference(std::unordered_map<uint,std::vector<uint>>& clusterMap, uint clusterID)
@@ -123,7 +155,8 @@ void BNSegmentator::AnnotatePointCluster(pcl::PointXYZRGB inPoint)
         
 
     m_searchKDTree.nearestKSearch (inPoint, 1, indices1, distances);
-    m_regionGrowingSegmentator.getSegmentFromPoint(indices1[0],cluster);
+    //siddhant|IMMEDIATE
+    m_regionGrowingSegmentatorRGB.getSegmentFromPoint(indices1[0],cluster);
 
     //Siddhant: I am not sure if PCL has a more efficient method of doing this. 
     //if not we should write our own implementation that somehow speeds this operation
@@ -139,7 +172,8 @@ void BNSegmentator::ResegmentPointCluster(pcl::PointXYZRGB inPoint)
         
     
     m_searchKDTree.nearestKSearch (inPoint, 1, indices1, distances);
-    m_regionGrowingSegmentator.getSegmentFromPoint(indices1[0],cluster);
+    //siddhant | Immediate
+    m_regionGrowingSegmentatorRGB.getSegmentFromPoint(indices1[0],cluster);
 
     //TODO do min cut segmentation here?
 
