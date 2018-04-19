@@ -1,7 +1,8 @@
 #include "includes/BNModel.h"
 
-BNModel::BNModel(BNState& inState):
-m_state(inState)
+BNModel::BNModel(BNState& inState, BNLabelStore& inStore):
+m_state(inState),
+m_labelStore(inStore)
 {
     std::cout << "Model Created" << std::endl;
 }
@@ -41,9 +42,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr BNModel::GetLabelledPointCloud ()
 void BNModel::SetSegmentedPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inSPointCloud)
 {
     pcl::copyPointCloud(*inSPointCloud,*m_segmentedPointCloud);
-    cout << "Number of points in Segemented Point Cloud: " << m_segmentedPointCloud->points.size() << endl;
-    cout << "Number of points in input Point Cloud: " << inSPointCloud->points.size() << endl;
 }
+
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr BNModel::GetSegmentedPointCloud()
 {
     return m_segmentedPointCloud;
@@ -64,5 +64,10 @@ int BNModel::GetAnnotationClass()
 }
 void BNModel::SetAnnotationClass(int inClass)
 {
+    cout << "setting annotation class as: " << inClass << endl;
     m_annotationClassNum = inClass;
+}
+BNLabelStore& BNModel::GetLabelStore()
+{
+    return m_labelStore;
 }

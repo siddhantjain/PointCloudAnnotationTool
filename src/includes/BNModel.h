@@ -1,6 +1,6 @@
 #include "common.h"
 #include "BNState.h"
-
+#include "BNLabelStore.h"
 #ifndef BN_MODEL_H
 #define BN_MODEL_H
 
@@ -8,7 +8,7 @@
 class BNModel
 {
 public:
-    BNModel(BNState& inState);
+    BNModel(BNState& inState, BNLabelStore& inStore);
     void InitModel(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inPointCloud);
     void SetPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inPointCloud);
     void SetSegmentedPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inSPointCloud);
@@ -19,6 +19,7 @@ public:
     void SetState(std::string inState);
     int GetAnnotationClass();
     void SetAnnotationClass(int inClass);
+    BNLabelStore& GetLabelStore();
 private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_pointCloud;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_labelledPointCloud;
@@ -28,6 +29,7 @@ private:
     //siddhant: This is a temp. The purpose is to serve as the number of class the user is annotating it
     //need to spend some time thinking about the best way to implement this
     int m_annotationClassNum;
+    BNLabelStore& m_labelStore;
 };
 
 #endif

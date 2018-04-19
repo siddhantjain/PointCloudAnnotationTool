@@ -1,8 +1,9 @@
 #include "includes/BNView.h"
 #include <functional>
 
-BNView::BNView(BNModel& inModel):
-m_model(inModel)
+BNView::BNView(BNModel& inModel, BNSegmentator& inSegmentator):
+m_model(inModel),
+m_segmentator(inSegmentator)
 {
     std::cout << "View Created" << std::endl;
 }
@@ -13,20 +14,63 @@ void BNView::RefreshStateView()
     // this message will be published everytime state changes. Alas, ain't nobody got time for that
     if(!m_viewer->updateText(m_model.GetState(),10, 10,40,1.0,1.0,0,"StateText"))
     {
-        cout << "Trying to add text" << endl;
         bool isSuccesful = m_viewer->addText(m_model.GetState(),10, 10, 40, 1.0,1.0,0,"StateText");   
-        cout << "Adding text succesful? " << isSuccesful << endl;
+    }
+
+    if (m_model.GetState() == "Annotate")
+    {
+        std::string ClassName = "Class: " + std::to_string(m_model.GetAnnotationClass());
+        if(!m_viewer->updateText(ClassName,1000, 10,40,1.0,1.0,0,"AnnotationClassText"))
+        {
+            
+            bool isSuccesful = m_viewer->addText(ClassName,1000, 10, 40, 1.0,1.0,0,"AnnotationClassText");   
+        }
     }      
 
+}
+void BNView::AnnotationModeKeyEventHandler(const pcl::visualization::KeyboardEvent &event)
+{
+    cout << "Annotation Key event handler, key pressed: " << event.getKeySym () << endl;
+    //Siddhant: Haha. WTH is this code? Change it ASAP.
+    if (event.getKeySym () == "1")
+    {   
+        m_model.SetAnnotationClass(1);
+    }
+    if (event.getKeySym () == "2")
+    {   
+        m_model.SetAnnotationClass(2);
+    }
+    if (event.getKeySym () == "3" )
+    {   
+
+        m_model.SetAnnotationClass(3);
+    }
+    if (event.getKeySym () == "4" )
+    {   
+
+        m_model.SetAnnotationClass(4);
+    }
+    if (event.getKeySym () == "5" )
+    {   
+
+        m_model.SetAnnotationClass(5);
+    }
+    RefreshStateView();    
 }
 void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event, void* cookie)
 {
     cout << "Keyboard event occurred" << endl;
- 
+
+    if (m_model.GetState() == "Annotate")
+    {
+        AnnotationModeKeyEventHandler(event);
+        return;
+    }
+
     if (event.getKeySym () == "a" && event.keyDown ())
     {   
         m_model.SetState("Annotate");
-        VisualiseSegmentedPointCloud();
+        VisualiseLabelledCloud();
     }
     if (event.getKeySym () == "r" && event.keyDown ())
     {   
@@ -44,13 +88,21 @@ void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event
 
 void BNView::PointPickingCallbackEventHandler(const pcl::visualization::PointPickingEvent& event, void* cookie)
 {
-    cout << "Point Picking Event Occured" << endl;
+    cout << "Point Picking Detected" << endl;
+    if (m_model.GetState() == "Annotate")
+    {
+        pcl::PointXYZRGB picked_point;
+        event.getPoint(picked_point.x, picked_point.y, picked_point.z);
+        m_segmentator.AnnotatePointCluster(picked_point);
+        cout << "Annotation of point cluster done" << endl;
+        m_segmentator.UpdateLabelledPointCloud();
+        cout << "segmented cloud updated" << endl;
+        VisualiseLabelledCloud();
+    }    
 }
 
 void BNView::RegisterHandlers()
 {
-    
-    //auto fp = std::bind(&BNView::KeyboardEventHandler, NULL);
     m_viewer->registerKeyboardCallback(&BNView::KeyboardEventHandler,*this,(void*)NULL);
     m_viewer->registerPointPickingCallback(&BNView::PointPickingCallbackEventHandler,*this,(void*)NULL);
 }
@@ -96,18 +148,37 @@ void BNView::InitView()
     }
 }
 
+void ShowClasses(std::vector<BNLabel>& modelLabels)
+{
+    cout << "We have the following classes to label" << endl;
+    for (int i=0;i<modelLabels.size();i++)
+    {
+        cout << i+1 << ": " << modelLabels[i].m_labelName << endl;
+    }
+}
 void BNView::AnnotationCLI()
 {
     //siddhant: This can be a separate class I guess. Again, ain't nobody got time for good code in research?
     cout << "Welcome to the annotation interface. To annotate, type in a class name. All clusters you select will then be labelled as that class" << endl;
     cout << "When you are done, press q" << endl;
 
-    //TODO: Siddhantto
-    /*
-        Run a while loop waiting for user input, unless input is q.
-        deregister keyboard events (may not be trivial)
-        Whatever user writes down as class name, associate cluster with that class name
-        Eventually, we will figure out how to serialise the map and write down to JSON or something so that the deep learning
-        code can take it up as an input 
-    */
+    ShowClasses(m_model.GetLabelStore().GetLabels());
+
+    std::string answer = "";
+
+    while(answer != "quit")
+    {
+        cout << "command: " ;
+        cin >> answer;
+        cout << endl;
+
+        if(answer == "list")
+        {
+            ShowClasses(m_model.GetLabelStore().GetLabels());
+        }
+        else if(answer == "quit")
+        {
+            break;
+        }
+    }
 }

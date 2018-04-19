@@ -45,16 +45,19 @@ bool InitModel(BNModel& inModel, std::string PCFileName)
 int main (int argc, char** argv)
 {
     cout << "Welcome to our point cloud annotation tool. As of now, a new window will open where you can manipulate the point cloud. All messages will be shown in this video" << endl;
+    BNLabelStore toolLabelStore;
     BNState toolStateMachine;
-    BNModel toolModel(toolStateMachine);
-    BNView toolView(toolModel);
+    BNModel toolModel(toolStateMachine,toolLabelStore);
 
     if(!InitModel(toolModel,"../data/learn17.pcd"))
     {
       return -1;
     }
+
     cout << "Segmenting the point cloud" << endl;
-    BNSegmentator toolSegmentator(toolModel);
+    BNSegmentator toolSegmentator(toolModel,toolLabelStore);
+    
+    BNView toolView(toolModel,toolSegmentator);
     if(!InitView(toolView,toolModel))
     {
       return -1;

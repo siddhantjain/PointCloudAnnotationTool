@@ -1,5 +1,7 @@
 #include "common.h"
 #include "BNModel.h"
+#include "BNLabelStore.h"
+#include <pcl/search/search.h>
 
 #include <pcl/segmentation/region_growing_rgb.h>
 
@@ -10,17 +12,23 @@
 class BNSegmentator
 {
 public:
-    BNSegmentator(BNModel& inModel);
-    
+    BNSegmentator(BNModel& inModel, BNLabelStore& inLabelStore);
+    void AddLabel2ClusterMapping(uint classID,uint clusterID);
+    void AnnotatePointCluster(pcl::PointXYZRGB inPoint);
+    void UpdateLabelledPointCloud();
 private:
 	void InitSegmentator();
 	void SegmentPointCloud();
 	void DoRegionGrowingSegmentation();
 	void GetClusterFromPoint();
+	uint FindClusterIDFromClusters(pcl::PointIndices inCluster);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_pointCloud;
     BNModel& m_model;
     std::vector <pcl::PointIndices> m_clusters;
     pcl::RegionGrowingRGB<pcl::PointXYZRGB> m_regionGrowingSegmentator;
+    std::unordered_map<uint,std::vector<uint>> m_label2ClusterMap;
+    BNLabelStore& m_labelStore;
+    pcl::search::KdTree<pcl::PointXYZRGB> m_searchKDTree;
 };
 
 #endif
