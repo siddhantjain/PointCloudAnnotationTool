@@ -56,17 +56,23 @@ void BNSegmentator::DoRegionGrowingSegmentation()
     m_model.SetSegmentedPointCloud(m_regionGrowingSegmentator.getColoredCloud());
 }
 
-void RemoveExistingClusterReference(std::unordered_map<uint,std::vector<uint>>& clusterMap, uint clusterID)
+
+void HandleExistingClusterReference(std::unordered_map<uint,std::vector<uint>>& clusterMap, uint clusterID)
 {
+    //siddhant: Currently all I am doing to handle an existing cluster reference is to remove that reference
+    //What can be done is to resegment an existing reference by a min-cut segmentation on just point cloud where the point 
+    // for which a new segment is select is marked as foreground? 
+    //or we can do region growing, setting the max and min number of clusters to be two?
+
     std::unordered_map<uint,std::vector<uint>>::iterator startIt = clusterMap.begin();
     std::unordered_map<uint,std::vector<uint>>::iterator endIt = clusterMap.end();
 
     while(startIt!=endIt)
     {
-        std::vector<uint>& clusters = startIt->second;
+        std::vector<uint>& clustersIDs = startIt->second;
         std::vector<uint>::iterator foundValIt;
-        foundValIt = std::find(clusters.begin(), clusters.end(),clusterID); 
-        if (foundValIt != clusters.end())
+        foundValIt = std::find(clusterIDs.begin(), clusterIDs.end(),clusterID); 
+        if (foundValIt != clusterIDs.end())
         {
             clusters.erase(foundValIt);
             return;
@@ -87,7 +93,7 @@ void BNSegmentator::AddLabel2ClusterMapping(uint labelID,uint clusterID)
     //if clusterID already given some other cluster value, we should remove the old mapping
     //need to think of efficient ways of doing this, as it would not scale
 
-    RemoveExistingClusterReference(m_label2ClusterMap,clusterID);
+    HandleExistingClusterReference(m_label2ClusterMap,clusterID);
 
 
     m_label2ClusterMap[labelID].push_back(clusterID);
@@ -118,6 +124,25 @@ void BNSegmentator::AnnotatePointCluster(pcl::PointXYZRGB inPoint)
 
     m_searchKDTree.nearestKSearch (inPoint, 1, indices1, distances);
     m_regionGrowingSegmentator.getSegmentFromPoint(indices1[0],cluster);
+
+    //Siddhant: I am not sure if PCL has a more efficient method of doing this. 
+    //if not we should write our own implementation that somehow speeds this operation
+    uint clusterID = FindClusterIDFromClusters(cluster);
+    cout << "adding label " << m_model.GetAnnotationClass() << " for cluster: " << clusterID << endl;
+    AddLabel2ClusterMapping(m_model.GetAnnotationClass(),clusterID);
+}
+void BNSegmentator::ResegmentPointCluster(pcl::PointXYZRGB inPoint)
+{
+    pcl::PointIndices cluster;
+    std::vector<int> indices1 (1);
+    std::vector<float> distances (1);
+        
+    
+    m_searchKDTree.nearestKSearch (inPoint, 1, indices1, distances);
+    m_regionGrowingSegmentator.getSegmentFromPoint(indices1[0],cluster);
+
+    //TODO do min cut segmentation here?
+
 
     //Siddhant: I am not sure if PCL has a more efficient method of doing this. 
     //if not we should write our own implementation that somehow speeds this operation

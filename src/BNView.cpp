@@ -12,18 +12,23 @@ void BNView::RefreshStateView()
 
     //siddhant: This is a sad shortcut. What we ideally want is the state machine to pass a message that viewer subscribes
     // this message will be published everytime state changes. Alas, ain't nobody got time for that
+    
+    //Also, the location of the labels should be dependent on the screen size (making this portable across screens will be fun, lol)
+
     if(!m_viewer->updateText(m_model.GetState(),10, 10,40,1.0,1.0,0,"StateText"))
     {
-        bool isSuccesful = m_viewer->addText(m_model.GetState(),10, 10, 40, 1.0,1.0,0,"StateText");   
+        string::string modeLabelText = "Mode: " + m_model.GetState(); 
+        bool isSuccesful = m_viewer->addText(modeLabelText,10, 10, 40, 1.0,1.0,0,"StateText");   
     }
 
-    if (m_model.GetState() == "Annotate")
+    if (m_model.GetState() == "Annotate" || m_model.GetState() == "Correct" )
     {
-        std::string ClassName = "Class: " + std::to_string(m_model.GetAnnotationClass());
-        if(!m_viewer->updateText(ClassName,1000, 10,40,1.0,1.0,0,"AnnotationClassText"))
+        std::string ClassName = "Class: " + m_model.GetLabelStore().GetNameForLabel(m_model.GetAnnotationClass());
+        BNLabelColor classColor = m_model.GetLabelStore().GetColorForLabel(m_model.GetAnnotationClass());
+        if(!m_viewer->updateText(ClassName,1000, 10,40,classColor.red/255.0,classColor.green/255.0,classColor.blue/255.0,"AnnotationClassText"))
         {
             
-            bool isSuccesful = m_viewer->addText(ClassName,1000, 10, 40, 1.0,1.0,0,"AnnotationClassText");   
+            bool isSuccesful = m_viewer->addText(ClassName,1200, 10, 40, classColor.red/255.0,classColor.green/255.0,classColor.blue/255.0,"AnnotationClassText");   
         }
     }      
 
@@ -32,6 +37,10 @@ void BNView::AnnotationModeKeyEventHandler(const pcl::visualization::KeyboardEve
 {
     cout << "Annotation Key event handler, key pressed: " << event.getKeySym () << endl;
     //Siddhant: Haha. WTH is this code? Change it ASAP.
+    if (event.getKeySym () == "0")
+    {   
+        m_model.SetAnnotationClass(0);
+    }
     if (event.getKeySym () == "1")
     {   
         m_model.SetAnnotationClass(1);
@@ -55,6 +64,12 @@ void BNView::AnnotationModeKeyEventHandler(const pcl::visualization::KeyboardEve
 
         m_model.SetAnnotationClass(5);
     }
+    if (event.getKeySym () == "c" )
+    {   
+        m_model.SetState("Correct");
+    }
+
+
     RefreshStateView();    
 }
 void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event, void* cookie)
@@ -89,16 +104,25 @@ void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event
 void BNView::PointPickingCallbackEventHandler(const pcl::visualization::PointPickingEvent& event, void* cookie)
 {
     cout << "Point Picking Detected" << endl;
+    pcl::PointXYZRGB picked_point;
+    event.getPoint(picked_point.x, picked_point.y, picked_point.z);
+
     if (m_model.GetState() == "Annotate")
     {
-        pcl::PointXYZRGB picked_point;
-        event.getPoint(picked_point.x, picked_point.y, picked_point.z);
         m_segmentator.AnnotatePointCluster(picked_point);
         cout << "Annotation of point cluster done" << endl;
         m_segmentator.UpdateLabelledPointCloud();
         cout << "segmented cloud updated" << endl;
         VisualiseLabelledCloud();
     }    
+    if (m_model.GetState() == "Correct")
+    {
+        m_segmentator.ResegmentPointCluster(picked_point);
+        cout << "Resegmentation of point cluster done" << endl;
+        m_segmentator.UpdateLabelledPointCloud();
+        cout << "segmented cloud updated" << endl;
+        VisualiseLabelledCloud();    
+    }
 }
 
 void BNView::RegisterHandlers()

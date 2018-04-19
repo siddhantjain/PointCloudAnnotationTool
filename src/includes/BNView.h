@@ -12,7 +12,6 @@ public:
     void VisualiseSegmentedPointCloud();
 
 private:
-    void (keyboardCallBack)(const pcl::visualization::KeyboardEvent &event, void* cookie);
     void RegisterHandlers();
     void KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event, void* cookie);
     void PointPickingCallbackEventHandler(const pcl::visualization::PointPickingEvent& event, void* cookie);

@@ -15,6 +15,7 @@ public:
     BNSegmentator(BNModel& inModel, BNLabelStore& inLabelStore);
     void AddLabel2ClusterMapping(uint classID,uint clusterID);
     void AnnotatePointCluster(pcl::PointXYZRGB inPoint);
+    void ResegmentPointCluster(pcl::PointXYZRGB inPoint);
     void UpdateLabelledPointCloud();
 private:
 	void InitSegmentator();
