@@ -4,6 +4,7 @@
 #include "includes/BNView.h"
 #include "includes/BNSegmentator.h"
 #include "includes/BNState.h"
+
 //New includes end
 
 #include "includes/common.h"
@@ -44,7 +45,11 @@ bool InitModel(BNModel& inModel, std::string PCFileName)
 
 int main (int argc, char** argv)
 {
-    cout << "Welcome to our point cloud annotation tool. As of now, a new window will open where you can manipulate the point cloud. All messages will be shown in this video" << endl;
+    BNUtils::loglevel_e loglevel = BNUtils::logERROR;
+    loglevel = BNUtils::logINFO;
+
+    BNUtils::BNLogger(BNUtils::logINFO) << "Welcome to our point cloud annotation tool. As of now, a new window will open where you can manipulate the point cloud. All messages will be shown in this video";
+    //cout << "Welcome to our point cloud annotation tool. As of now, a new window will open where you can manipulate the point cloud. All messages will be shown in this video" << endl;
     BNLabelStore toolLabelStore;
     BNState toolStateMachine;
     BNModel toolModel(toolStateMachine,toolLabelStore);

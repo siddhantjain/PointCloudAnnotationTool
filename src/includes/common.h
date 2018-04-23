@@ -1,4 +1,7 @@
 
+#ifndef COMMON_H
+#define COMMON_H
+
 /*//C++ headers
 #include <iostream>
 #include <vector>
@@ -33,3 +36,47 @@
 #include <signal.h>
 #include <unistd.h>
 
+
+
+namespace BNUtils
+{
+    enum loglevel_e
+    {logERROR, logWARNING, logINFO, logDEBUG, logDEBUG1, logDEBUG2, logDEBUG3, logDEBUG4};
+
+    class BNLogger
+    {
+    public:
+        BNLogger(loglevel_e _loglevel = logERROR) {
+            _buffer << _loglevel << " :" 
+                << std::string(
+                    _loglevel > logDEBUG 
+                    ? (_loglevel - logDEBUG) * 4 
+                    : 1
+                    , ' ');
+        }
+
+        template <typename T>
+        BNLogger & operator<<(T const & value)
+        {
+            _buffer << value;
+            return *this;
+        }
+
+        ~BNLogger()
+        {
+            _buffer << std::endl;
+            // This is atomic according to the POSIX standard
+            // http://www.gnu.org/s/libc/manual/html_node/Streams-and-Threads.html
+            std::cerr << _buffer.str();
+        }
+
+    private:
+        std::ostringstream _buffer;
+    };
+
+    //extern loglevel_e loglevel;
+
+   // #define log(level) if (level > loglevel) ; else BNLogger(level)
+}
+
+#endif

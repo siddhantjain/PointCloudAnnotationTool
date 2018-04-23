@@ -17,7 +17,7 @@ void DisplayAllLabelNames(boost::shared_ptr<pcl::visualization::PCLVisualizer> i
         std::string ClassName = "Label: " + modelLabels[i].m_labelName + "( " + std::to_string(i) + " )";
         cout << "Displaying: " << ClassName << endl;
         BNLabelColor classColor = modelLabels[i].m_color;
-        uint fontSize = 20;
+        uint fontSize = 40;
         uint posX = 10;
         uint posY = 800 - i*(fontSize+5);
         if(!inViewer->updateText(ClassName,posX, posY,10,classColor.red/255.0,classColor.green/255.0,classColor.blue/255.0,ClassName))
