@@ -78,7 +78,11 @@ void BNView::AnnotationModeKeyEventHandler(const pcl::visualization::KeyboardEve
     
     if (event.getKeySym () == "c" )
     {   
-        m_model.SetState("Correct");
+        m_model.SetState("Resegment");
+    }
+    if (event.getKeySym () == "r" )
+    {   
+        m_model.SetState("Euclidean");
     }
     if (event.getKeySym () == "i" )
     {   
@@ -132,14 +136,23 @@ void BNView::PointPickingCallbackEventHandler(const pcl::visualization::PointPic
         cout << "segmented cloud updated" << endl;
         VisualiseLabelledCloud();
     }    
-    if (m_model.GetState() == "Correct")
+    if (m_model.GetState() == "Resegment")
     {
-        m_segmentator.ResegmentPointCluster(picked_point);
+        m_segmentator.ResegmentPointCluster(picked_point,0);
         cout << "Resegmentation of point cluster done" << endl;
         m_segmentator.UpdateLabelledPointCloud();
         cout << "segmented cloud updated" << endl;
         VisualiseLabelledCloud();    
     }
+    if (m_model.GetState() == "Euclidean")
+    {
+        m_segmentator.ResegmentPointCluster(picked_point,1);
+        cout << "Resegmentation of point cluster done" << endl;
+        m_segmentator.UpdateLabelledPointCloud();
+        cout << "segmented cloud updated" << endl;
+        VisualiseLabelledCloud();    
+    }
+
 }
 
 void BNView::RegisterHandlers()

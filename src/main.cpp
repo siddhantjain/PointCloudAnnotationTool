@@ -54,7 +54,7 @@ int main (int argc, char** argv)
     BNState toolStateMachine;
     BNModel toolModel(toolStateMachine,toolLabelStore);
 
-    if(!InitModel(toolModel,"../data/test62.pcd"))
+    if(!InitModel(toolModel,"../data/test64.pcd"))
     {
       return -1;
     }

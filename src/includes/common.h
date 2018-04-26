@@ -32,6 +32,7 @@
 #include <pcl/filters/crop_box.h>
 #include <pcl/segmentation/min_cut_segmentation.h>
 #include <pcl/segmentation/region_growing_rgb.h>
+#include <pcl/segmentation/extract_clusters.h>
 #include <execinfo.h>
 #include <signal.h>
 #include <unistd.h>
