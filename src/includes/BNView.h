@@ -21,4 +21,5 @@ private:
     BNModel& m_model;
     BNSegmentator& m_segmentator;
     boost::shared_ptr<pcl::visualization::PCLVisualizer> m_viewer;
+    void WritePointCloudToFile();
 };

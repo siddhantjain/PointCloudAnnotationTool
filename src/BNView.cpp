@@ -89,6 +89,11 @@ void BNView::AnnotationModeKeyEventHandler(const pcl::visualization::KeyboardEve
         m_model.SetState("Init");
         VisualiseRawCloud();
     }
+    if(event.getKeySym() == "b" && event.keyDown())
+    {
+      //  m_segmentator.AutoCompleteLabelling();
+      //  VisualiseLabelledCloud();
+    }
 
 
     RefreshStateView();    
@@ -118,7 +123,10 @@ void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event
         m_model.SetState("Current Labelled Cloud");
         VisualiseLabelledCloud();
     }
-
+    if(event.getKeySym() == "w" && event.keyDown())
+    {
+        m_segmentator.WritePointCloudToFile();
+    }
     RefreshStateView();
 }
 
@@ -164,6 +172,7 @@ void BNView::VisualiseLabelledCloud()
 {
     m_viewer->removeAllPointClouds();
     m_viewer->addPointCloud<pcl::PointXYZRGB> (m_model.GetLabelledPointCloud(), "Labelled Point Cloud");
+  //  m_viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "Labelled Point Cloud");
     //siddhant: do we need this?
     m_viewer->spinOnce (1);
 }
@@ -171,6 +180,7 @@ void BNView::VisualiseRawCloud()
 {
     m_viewer->removeAllPointClouds();
     m_viewer->addPointCloud<pcl::PointXYZRGB> (m_model.GetRawPointCloud(), "Raw Point Cloud");
+   // m_viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "Raw Point Cloud");
     //siddhant: do we need this?
     m_viewer->spinOnce (1);
 }
@@ -179,6 +189,7 @@ void BNView::VisualiseSegmentedPointCloud()
     m_viewer->removeAllPointClouds();
     cout << "Removal Succesful" << endl;
     m_viewer->addPointCloud<pcl::PointXYZRGB> (m_model.GetSegmentedPointCloud(), "Segmented Point Cloud");
+    //m_viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "Segmented Point Cloud");
     //siddhant: do we need this?
     m_viewer->spinOnce (1);   
 }
@@ -188,9 +199,9 @@ void BNView::InitView()
      //boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
     m_viewer = boost::shared_ptr<pcl::visualization::PCLVisualizer>(new pcl::visualization::PCLVisualizer ("BN PCL Viewer"));
 
-    m_viewer->setBackgroundColor (0, 0, 0);
+    m_viewer->setBackgroundColor (0.38, 0.38, 0.38);
     m_viewer->addPointCloud<pcl::PointXYZRGB> (m_model.GetRawPointCloud(), "Raw Point Cloud");
-    m_viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "Raw Point Cloud");
+    m_viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "Raw Point Cloud");
     m_viewer->initCameraParameters ();
 
     RegisterHandlers();

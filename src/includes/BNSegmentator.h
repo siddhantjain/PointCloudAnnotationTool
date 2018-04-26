@@ -18,6 +18,7 @@ public:
     void ResegmentPointCluster(pcl::PointXYZRGB inPoint, uint mode);
     void AutoCompleteLabelling();
     void UpdateLabelledPointCloud();
+    void WritePointCloudToFile();
 private:
 	void InitSegmentator();
 	void SegmentPointCloud();

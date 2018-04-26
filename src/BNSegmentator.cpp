@@ -46,9 +46,10 @@ void BNSegmentator::InitSegmentator()
     // one of them is mostly redundant. Figure out which one and resolve this stupidity
     m_searchKDTree.setInputCloud(m_model.GetRawPointCloud());
 
+    //siddhant: This way of getting indices is pretty stupid. Come up with a better way
     pass.setInputCloud (m_model.GetRawPointCloud());
     pass.setFilterFieldName ("z");
-    pass.setFilterLimits (0.0, 10.0);
+    pass.setFilterLimits (-1000.0, 10000.0);
     pass.filter (*m_origCloudIndices);
 
     m_regionGrowingSegmentatorRGB.setInputCloud (m_model.GetRawPointCloud());
@@ -62,7 +63,7 @@ void BNSegmentator::InitSegmentator()
   
 
     
-    m_regionGrowingSegmentatorN.setMinClusterSize (600);
+    m_regionGrowingSegmentatorN.setMinClusterSize (6);
     m_regionGrowingSegmentatorN.setMaxClusterSize (1000000);
     m_regionGrowingSegmentatorN.setSearchMethod (tree);
     m_regionGrowingSegmentatorN.setNumberOfNeighbours (24);
@@ -184,14 +185,12 @@ uint BNSegmentator::FindClusterIDFromClusters(pcl::PointIndices inCluster)
 
 uint BNSegmentator::FindClusterIDFromPointIndex(int inPointIndex)
 {
-    cout << "Finding point in cluster of size: " << m_clusters.size() << endl;
     std::vector<pcl::PointIndices>::iterator startIt = m_clusters.begin();
     std::vector <pcl::PointIndices>::iterator endIt = m_clusters.end();
 
     uint clusterID=0;
     while(startIt!=endIt)
     {
-        cout << clusterID << ": cluster size->" << startIt->indices.size() << endl; 
         if(find(startIt->indices.begin(), startIt->indices.end(), inPointIndex) != startIt->indices.end())
             return clusterID;
         clusterID++;
@@ -350,5 +349,100 @@ void BNSegmentator::UpdateLabelledPointCloud()
 
 void BNSegmentator::AutoCompleteLabelling()
 {
+    //idea is to label all unlabelled points by simply finding the labels of neartest neighbours and taking the max
+    //things of ways of doing this efficiently. With current datastructures, that might be tough.
     
+     std::vector<uint> unlabelledClusters = m_label2ClusterMap[0];
+     std::vector<uint>::iterator mapStartIt = unlabelledClusters.begin();
+     std::vector<uint>::iterator mapEndIt = unlabelledClusters.end();
+
+     for(int k=0;k<m_label2ClusterMap.size();k++)
+     {
+        cout << "size of cluster " << k << " is " << m_label2ClusterMap[k].size() << endl;
+     }
+     cout << "unlabelledCluster.size "  << unlabelledClusters.size() << endl;
+     for(int j=0;j<unlabelledClusters.size();j++)
+     {
+
+        cout << "Labelling unlablled cluster: " << unlabelledClusters[j] << endl;
+        pcl::PointIndices clusterPoints = m_clusters[*mapStartIt];
+
+        //std::vector <pcl::PointIndices>::iterator clusterStartIt = m_clusters[*mapStartIt].begin();
+        //std::vector <pcl::PointIndices>::iterator clusterEndIt = m_clusters[*mapStartIt].end();
+            
+        //while(clusterStartIt!=clusterEndIt)
+        //{
+            
+
+                for(int i=0;i<clusterPoints.indices.size();i++)
+                {
+                    std::vector<int> kNNIndices(5);
+                    std::vector<float> KNNDistances(5);
+                    m_searchKDTree.nearestKSearch (clusterPoints.indices[i], 5, kNNIndices, KNNDistances);
+
+                    std::unordered_map<int,int> clusterIDCounter;
+                    int maxClusterID;
+                    int maxClusterValue;
+                    for(int j=0;j<5;j++)
+                    {
+                        uint clusterID = FindClusterIDFromPointIndex(kNNIndices[i]);
+                        if(clusterIDCounter[clusterID]==1)
+                            clusterIDCounter[clusterID]++;
+                        else
+                            clusterIDCounter[clusterID]=1;
+
+                        if(clusterIDCounter[clusterID] > maxClusterValue)
+                        {
+                            maxClusterValue = clusterIDCounter[clusterID];
+                            maxClusterID = clusterID;
+                        }
+                    }
+
+                    m_clusters[maxClusterID].indices.push_back(clusterPoints.indices[i]);
+                }
+          //  clusterStartIt++; 
+        //}
+         mapStartIt++;    
+     }
+
+    
+
+
+}
+
+
+//Siddhant: THIS DOES NOT BELONG HERE. THINK OF A BETTER PLACE TO PUT THIS 
+void BNSegmentator::WritePointCloudToFile()
+{
+    //currently writing just the labelled point cloud directly. 
+    //Later on, extend this function to select a writer and corresponding point cloud
+    cout << "Writing Point Cloud to File" << endl;
+    std::ofstream pointCloudFile("toolOutput.txt");
+
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr labelledCloud = m_model.GetLabelledPointCloud();
+    std::unordered_map<uint,std::vector<uint>>::iterator startIt = m_label2ClusterMap.begin();
+    std::unordered_map<uint,std::vector<uint>>::iterator endIt = m_label2ClusterMap.end();
+
+    while(startIt != endIt)
+    {
+        std::vector<uint>::iterator clusterStartIt = startIt->second.begin();
+        std::vector<uint>::iterator clusterEndIt = startIt->second.end();
+
+        while(clusterStartIt!=clusterEndIt)
+        {
+            pcl::PointIndices clusterPoints = m_clusters[*clusterStartIt];
+
+            for(int i=0;i<clusterPoints.indices.size();i++)
+            {
+                int label = startIt->first;
+                float ptX = labelledCloud->points[clusterPoints.indices[i]].x;
+                float ptY = labelledCloud->points[clusterPoints.indices[i]].y;
+                float ptZ = labelledCloud->points[clusterPoints.indices[i]].z;
+                pointCloudFile << ptX << " " << ptY << " " << ptZ << " " << label << endl;
+            }
+            clusterStartIt ++;
+
+        }
+        startIt++;
+    }
 }
