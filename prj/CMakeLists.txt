@@ -10,6 +10,7 @@ set(srcs
  		 ../src/BNSegmentator.cpp
  		 ../src/BNState.cpp
  		 ../src/BNLabelStore.cpp
+ 		 ../src/BNConfigReader.cpp
         )
 
 set(incs
@@ -18,8 +19,9 @@ set(incs
  		 "../src//includes/BNView.h"
  		 "../src/includes/BNSegmentator.h"
  		 "../src/includes/common.h"
- 		 "../src/inclludes/BNLabelStore.h"
- 		 "../src/inclludes/BNLabel.h"
+ 		 "../src/includes/BNLabelStore.h"
+ 		 "../src/includes/BNLabel.h"
+ 		 "../src/includes/BNConfigReader.h"
          )
 
 set(BN_LIB "bluenotebook")

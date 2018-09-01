@@ -278,7 +278,7 @@ void BNSegmentator::ResegmentPointCluster(pcl::PointXYZRGB inPoint,uint mode)
     pcl::PointIndices unmarkedPoints;
     std::unordered_set<int> allPoints;
 
-    //siddhant: This seems super inefficient and is slowing things down. Think of a better way to do this
+    
     for(int i=0;i<clusterIndices->size();i++)
     {
         allPoints.insert(clusterIndices.get()->at(i));
@@ -423,6 +423,7 @@ void BNSegmentator::WritePointCloudToFile()
     std::unordered_map<uint,std::vector<uint>>::iterator startIt = m_label2ClusterMap.begin();
     std::unordered_map<uint,std::vector<uint>>::iterator endIt = m_label2ClusterMap.end();
 
+    int numPointsWritten = 0;
     while(startIt != endIt)
     {
         std::vector<uint>::iterator clusterStartIt = startIt->second.begin();
@@ -439,10 +440,13 @@ void BNSegmentator::WritePointCloudToFile()
                 float ptY = labelledCloud->points[clusterPoints.indices[i]].y;
                 float ptZ = labelledCloud->points[clusterPoints.indices[i]].z;
                 pointCloudFile << ptX << " " << ptY << " " << ptZ << " " << label << endl;
+                numPointsWritten++;
             }
             clusterStartIt ++;
 
         }
         startIt++;
     }
+
+    cout << "numPointsWritten: " << numPointsWritten << endl;
 }

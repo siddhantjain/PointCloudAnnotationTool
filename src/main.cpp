@@ -4,6 +4,7 @@
 #include "includes/BNView.h"
 #include "includes/BNSegmentator.h"
 #include "includes/BNState.h"
+#include "includes/BNConfigReader.h"
 
 //New includes end
 
@@ -71,15 +72,18 @@ int main (int argc, char** argv)
     BNUtils::loglevel_e loglevel = BNUtils::logERROR;
     loglevel = BNUtils::logINFO;
 
-    BNUtils::BNLogger(BNUtils::logINFO) << "Welcome to our point cloud annotation tool. As of now, a new window will open where you can manipulate the point cloud. All messages will be shown in this video";
-    //cout << "Welcome to our point cloud annotation tool. As of now, a new window will open where you can manipulate the point cloud. All messages will be shown in this video" << endl;
+    BNUtils::BNLogger(BNUtils::logINFO) << "Welcome to our point cloud annotation tool. As of now, a new window will open where you can manipulate the point cloud. All messages will be shown in this window";
+    
     BNLabelStore toolLabelStore;
     BNState toolStateMachine;
     BNModel toolModel(toolStateMachine,toolLabelStore);
 
     bool isXYZPointCloud = argc>1;
 
-    if(!InitModel(toolModel,"../data/test64.pcd",isXYZPointCloud))
+    BNConfigReader configReader("../src/cfg_file.txt");
+    CONFIG prg_config = configReader.GetConfig();
+    
+    if(!InitModel(toolModel,prg_config["pointcloud"],isXYZPointCloud))
     {
       return -1;
     }

@@ -15,6 +15,7 @@
 //PCL headers:
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/io/pcd_io.h>
@@ -38,6 +39,7 @@
 #include <unistd.h>
 
 
+#define CONFIG std::unordered_map<std::string,std::string>
 
 namespace BNUtils
 {

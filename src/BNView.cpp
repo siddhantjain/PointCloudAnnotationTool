@@ -172,7 +172,7 @@ void BNView::VisualiseLabelledCloud()
 {
     m_viewer->removeAllPointClouds();
     m_viewer->addPointCloud<pcl::PointXYZRGB> (m_model.GetLabelledPointCloud(), "Labelled Point Cloud");
-  //  m_viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "Labelled Point Cloud");
+    m_viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "Labelled Point Cloud");
     //siddhant: do we need this?
     m_viewer->spinOnce (1);
 }
@@ -189,7 +189,7 @@ void BNView::VisualiseSegmentedPointCloud()
     m_viewer->removeAllPointClouds();
     cout << "Removal Succesful" << endl;
     m_viewer->addPointCloud<pcl::PointXYZRGB> (m_model.GetSegmentedPointCloud(), "Segmented Point Cloud");
-    //m_viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "Segmented Point Cloud");
+    m_viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "Segmented Point Cloud");
     //siddhant: do we need this?
     m_viewer->spinOnce (1);   
 }
