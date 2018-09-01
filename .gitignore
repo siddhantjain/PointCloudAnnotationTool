@@ -31,6 +31,9 @@
 *.out
 *.app
 
+# OSX stuff
+*.DS_STORE
+
 #Folders
 build/
 data/
