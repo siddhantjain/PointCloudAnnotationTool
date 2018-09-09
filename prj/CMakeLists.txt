@@ -11,6 +11,7 @@ set(srcs
  		 ../src/BNState.cpp
  		 ../src/BNLabelStore.cpp
  		 ../src/BNConfigReader.cpp
+ 		 ../src/BNPointCloudReader.cpp
         )
 
 set(incs
@@ -22,6 +23,7 @@ set(incs
  		 "../src/includes/BNLabelStore.h"
  		 "../src/includes/BNLabel.h"
  		 "../src/includes/BNConfigReader.h"
+ 		 "../src/includes/BNPointCloudReader.h"
          )
 
 set(BN_LIB "bluenotebook")

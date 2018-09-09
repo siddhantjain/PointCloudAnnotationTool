@@ -1,1 +1,1 @@
-pointcloud ../data/test42.pcd
+pointcloud ../data/012137.txt
