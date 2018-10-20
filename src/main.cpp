@@ -3,6 +3,7 @@
 #include "includes/BNModel.h"
 #include "includes/BNView.h"
 #include "includes/BNSegmentator.h"
+#include "includes/BNPainter.h"
 #include "includes/BNState.h"
 #include "includes/BNConfigReader.h"
 #include "includes/BNPointCloudReader.h"
@@ -23,14 +24,14 @@ bool InitView(BNView& inView, BNModel& inModel)
     return true;
 }
 
-bool InitModel(BNModel& inModel, std::string PCFileName, bool isXYZPointCloud)
+bool InitModel(BNModel& inModel, CONFIG& prg_config)
 {
     //std::string PCFileName = "../data/93.pcd";
     cout << "Initialising Model" << endl;
-    cout << "Loading point cloud: " << PCFileName << endl;
+    cout << "Loading point cloud: " << prg_config["PointCloud"] << endl;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr inCloud (new pcl::PointCloud<pcl::PointXYZRGB>);
 
-    BNPointCloudReader pcReader(PCFileName,inCloud);
+    BNPointCloudReader pcReader(prg_config["PointCloud"],inCloud);
     inModel.InitModel(inCloud);
     return true;
 }
@@ -45,22 +46,22 @@ int main (int argc, char** argv)
     
     BNLabelStore toolLabelStore;
     BNState toolStateMachine;
-    BNModel toolModel(toolStateMachine,toolLabelStore);
-
-    bool isXYZPointCloud = argc>1;
-
     BNConfigReader configReader("../src/cfg_file.txt");
     CONFIG prg_config = configReader.GetConfig();
+
+    BNModel toolModel(toolStateMachine,toolLabelStore, prg_config);
     
-    if(!InitModel(toolModel,prg_config["pointcloud"],isXYZPointCloud))
+    if(!InitModel(toolModel, prg_config))
     {
       return -1;
     }
 
-    cout << "Segmenting the point cloud" << endl;
-    BNSegmentator toolSegmentator(toolModel,toolLabelStore);
+    //cout << "Segmenting the point cloud" << endl;
+    BNSegmentator toolSegmentator(toolModel,toolLabelStore, prg_config);
     
-    BNView toolView(toolModel,toolSegmentator);
+    cout << "Readying the painter" << endl;
+    BNPainter toolPainter(toolModel,toolLabelStore,prg_config);
+    BNView toolView(toolModel,toolSegmentator, toolPainter);
     if(!InitView(toolView,toolModel))
     {
       return -1;

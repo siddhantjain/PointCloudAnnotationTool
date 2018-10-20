@@ -1,1 +1,5 @@
-pointcloud ../data/012137.txt
+PointCloud ../data/points_chair.txt
+LastPartLabel 0
+OutputFileName /Users/siddhant/Documents/Acads/Spring_2018/capstone/github/PointCloudAnnotationTool/output/PaintingTest3.txt
+PythonOutputFileName ../output/PaintingTest3_labelled.txt
+NumClasses 6

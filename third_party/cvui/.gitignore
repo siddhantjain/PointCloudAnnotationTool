@@ -1,0 +1,63 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+#Misc
+*.sdf
+*.opensdf
+*.suo
+example/build/*
+.idea
+
+#Build paths
+build
+install
+bin
+
+# "Compiled" docs folder
+/docs/_site
+
+#Save those, please
+!example/build/README.txt
+!example/build/data/*
+html
+
+# eclipse
+.cproject
+.project
+.settings/
+
+# cmake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Files related to the python packaging process
+/python/package/cvui/cvui.py
+/python/package/cvui.egg-info
+/python/package/dist

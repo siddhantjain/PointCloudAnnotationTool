@@ -17,9 +17,10 @@ void crashHandler(int sig) {
   exit(1);
 }
 
-BNSegmentator::BNSegmentator(BNModel& inModel, BNLabelStore& inStore):
+BNSegmentator::BNSegmentator(BNModel& inModel, BNLabelStore& inStore, CONFIG& prg_config):
 m_model(inModel),
-m_labelStore(inStore)
+m_labelStore(inStore),
+m_prgConfig(prg_config)
 {
     cout << "Constructing Segmentator" << endl;
     InitSegmentator();
@@ -63,10 +64,10 @@ void BNSegmentator::InitSegmentator()
   
 
     
-    m_regionGrowingSegmentatorN.setMinClusterSize (6);
+    m_regionGrowingSegmentatorN.setMinClusterSize (1);
     m_regionGrowingSegmentatorN.setMaxClusterSize (1000000);
     m_regionGrowingSegmentatorN.setSearchMethod (tree);
-    m_regionGrowingSegmentatorN.setNumberOfNeighbours (24);
+    m_regionGrowingSegmentatorN.setNumberOfNeighbours (16);
     m_regionGrowingSegmentatorN.setInputCloud (m_model.GetRawPointCloud());
       //reg.setIndices (indices);
     m_regionGrowingSegmentatorN.setInputNormals (normals);
@@ -102,10 +103,16 @@ void BNSegmentator::InitSegmentator()
     cout << "Segmentation Initialisation done" << endl;
 }
 
+void BNSegmentator::UpdateNormalBasedSegmentatorParams(double smoothnessThreshold, double curvatureThreshold)
+{
+    m_regionGrowingSegmentatorN.setSmoothnessThreshold(smoothnessThreshold/180.0*M_PI);
+    m_regionGrowingSegmentatorN.setCurvatureThreshold(curvatureThreshold);
+    SegmentPointCloud();
+}
 void BNSegmentator::SegmentPointCloud()
 {
-    DoColorRegionGrowingSegmentation();
-    //DoNormalRegionGrowingSegmentation();
+   // DoColorRegionGrowingSegmentation();
+    DoNormalRegionGrowingSegmentation();
 }
 
 void BNSegmentator::DoColorRegionGrowingSegmentation()
@@ -124,15 +131,15 @@ void BNSegmentator::DoNormalRegionGrowingSegmentation()
 
 
 
-void HandleExistingClusterReference(std::unordered_map<uint,std::vector<uint>>& clusterMap, uint clusterID)
+void HandleExistingClusterReference(std::unordered_map<int,std::vector<uint>>& clusterMap, uint clusterID)
 {
     //siddhant: Currently all I am doing to handle an existing cluster reference is to remove that reference
     //What can be done is to resegment an existing reference by a min-cut segmentation on just point cloud where the point 
     // for which a new segment is select is marked as foreground? 
     //or we can do region growing, setting the max and min number of clusters to be two?
 
-    std::unordered_map<uint,std::vector<uint>>::iterator startIt = clusterMap.begin();
-    std::unordered_map<uint,std::vector<uint>>::iterator endIt = clusterMap.end();
+    auto startIt = clusterMap.begin();
+    auto endIt = clusterMap.end();
 
     while(startIt!=endIt)
     {
@@ -149,7 +156,7 @@ void HandleExistingClusterReference(std::unordered_map<uint,std::vector<uint>>& 
     }
        
 }
-void BNSegmentator::AddLabel2ClusterMapping(uint labelID,uint clusterID)
+void BNSegmentator::AddLabel2ClusterMapping(int labelID,uint clusterID)
 {
     if(clusterID >= m_clusters.size())
     {
@@ -161,7 +168,6 @@ void BNSegmentator::AddLabel2ClusterMapping(uint labelID,uint clusterID)
     //need to think of efficient ways of doing this, as it would not scale
 
     HandleExistingClusterReference(m_label2ClusterMap,clusterID);
-
 
     m_label2ClusterMap[labelID].push_back(clusterID);
 }
@@ -314,14 +320,15 @@ void BNSegmentator::ResegmentPointCluster(pcl::PointXYZRGB inPoint,uint mode)
     
 
     m_clusters.push_back(unmarkedPoints);
+    //siddhant: Read from the label store for the id, instead of directly putting -1
     AddLabel2ClusterMapping(0,m_clusters.size()-1);
 }
 
 void BNSegmentator::UpdateLabelledPointCloud()
 {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr labelledCloud = m_model.GetLabelledPointCloud();
-    std::unordered_map<uint,std::vector<uint>>::iterator startIt = m_label2ClusterMap.begin();
-    std::unordered_map<uint,std::vector<uint>>::iterator endIt = m_label2ClusterMap.end();
+    std::unordered_map<int,std::vector<uint>>::iterator startIt = m_label2ClusterMap.begin();
+    std::unordered_map<int,std::vector<uint>>::iterator endIt = m_label2ClusterMap.end();
 
     while(startIt != endIt)
     {
@@ -345,6 +352,7 @@ void BNSegmentator::UpdateLabelledPointCloud()
         startIt++;
     }
 }
+
 
 
 void BNSegmentator::AutoCompleteLabelling()
@@ -417,11 +425,16 @@ void BNSegmentator::WritePointCloudToFile()
     //currently writing just the labelled point cloud directly. 
     //Later on, extend this function to select a writer and corresponding point cloud
     cout << "Writing Point Cloud to File" << endl;
-    std::ofstream pointCloudFile("toolOutput.txt");
+    std::ofstream pointCloudFile(m_prgConfig["OutputFileName"]);
+
+    //Siddhant: Getting existing number of parts to start new labelling from this number
+    int lastPartLabel = stoi(m_prgConfig["LastPartLabel"]);
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr labelledCloud = m_model.GetLabelledPointCloud();
-    std::unordered_map<uint,std::vector<uint>>::iterator startIt = m_label2ClusterMap.begin();
-    std::unordered_map<uint,std::vector<uint>>::iterator endIt = m_label2ClusterMap.end();
+    std::vector<int> pointLabels(labelledCloud->points.size(),-1);
+
+    auto startIt = m_label2ClusterMap.begin();
+    auto endIt = m_label2ClusterMap.end();
 
     int numPointsWritten = 0;
     while(startIt != endIt)
@@ -435,12 +448,18 @@ void BNSegmentator::WritePointCloudToFile()
 
             for(int i=0;i<clusterPoints.indices.size();i++)
             {
-                int label = startIt->first;
+                //siddhanj: subtracting by -1 here because pointnet code assumes class labels start from 0
+                // but in visualisation here, 0 is reserved for unlabelled points
+                int label = startIt->first -1;
+                //std::cout << "Label: " << label << std::endl;
+                label = label+lastPartLabel;
+                
+
                 float ptX = labelledCloud->points[clusterPoints.indices[i]].x;
                 float ptY = labelledCloud->points[clusterPoints.indices[i]].y;
                 float ptZ = labelledCloud->points[clusterPoints.indices[i]].z;
-                pointCloudFile << ptX << " " << ptY << " " << ptZ << " " << label << endl;
-                numPointsWritten++;
+                pointLabels[clusterPoints.indices[i]] = label;
+                //pointCloudFile << ptX << " " << ptY << " " << ptZ << " " << label << endl;
             }
             clusterStartIt ++;
 
@@ -448,5 +467,16 @@ void BNSegmentator::WritePointCloudToFile()
         startIt++;
     }
 
+    for(int i=0;i<labelledCloud->points.size();i++)
+    {
+            float ptX = labelledCloud->points[i].x;
+            float ptY = labelledCloud->points[i].y;
+            float ptZ = labelledCloud->points[i].z;
+            int label = pointLabels[i];
+            if(label!=-1)
+                std::cout << "Non -1 label" << endl;
+            pointCloudFile << ptX << " " << ptY << " " << ptZ << " " << label << endl;
+            numPointsWritten++;
+    }
     cout << "numPointsWritten: " << numPointsWritten << endl;
 }

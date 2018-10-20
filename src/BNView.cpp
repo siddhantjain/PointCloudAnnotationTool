@@ -1,13 +1,50 @@
 #include "includes/BNView.h"
+#define CVUI_IMPLEMENTATION
+#include "../third_party/cvui/cvui.h"
 #include <functional>
 
-BNView::BNView(BNModel& inModel, BNSegmentator& inSegmentator):
+
+#define WINDOW_NAME "Control Panel"
+
+BNView::BNView(BNModel& inModel, BNSegmentator& inSegmentator, BNPainter& inPainter):
 m_model(inModel),
-m_segmentator(inSegmentator)
+m_segmentator(inSegmentator),
+m_painter(inPainter)
 {
     std::cout << "View Created" << std::endl;
 }
 
+void BNView::InvokeSettingsPanel()
+{
+    cv::namedWindow(WINDOW_NAME);
+    cvui::init(WINDOW_NAME);
+    
+    int smootheness_threshold = 3;
+    int curvature_threshold = 1;
+
+    while(true)
+    {
+        cv::Mat frame = cv::Mat(500, 1000, CV_8UC3);
+        frame = cv::Scalar(49, 52, 49);
+        cvui::window(frame, 10, 50, 300, 300, "Settings");
+        cvui::trackbar(frame,15,110,165,&smootheness_threshold,0,180);
+        cvui::trackbar(frame,15,210,165,&curvature_threshold,1,10);
+
+        cvui::update();
+        cv::imshow(WINDOW_NAME, frame);
+        if(cv::waitKey(30) == 27)
+        {
+            break;
+        }    
+    }
+    m_segmentator.UpdateNormalBasedSegmentatorParams((double)smootheness_threshold,(double)curvature_threshold);
+}
+//this 
+void BNView::GetNewLabelsKeyPressed()
+{
+    m_model.GetNewLabels();
+    VisualiseLabelledCloud();
+}
 void DisplayAllLabelNames(boost::shared_ptr<pcl::visualization::PCLVisualizer> inViewer, BNLabelStore& inLabelStore)
 {
     std::vector<BNLabel>& modelLabels = inLabelStore.GetLabels();
@@ -89,14 +126,48 @@ void BNView::AnnotationModeKeyEventHandler(const pcl::visualization::KeyboardEve
         m_model.SetState("Init");
         VisualiseRawCloud();
     }
+    if (event.getKeySym() == "s")
+    {
+        InvokeSettingsPanel();
+    }
+    if (event.getKeySym() == "bracketright")
+    {
+        uint64_t currBrushSize  = m_painter.GetBrushSize();
+        cout << "Setting brush size to: " << currBrushSize+1 << endl;
+        m_painter.SetBrushSize(currBrushSize+1);
+    }
+    if (event.getKeySym() == "bracketleft")
+    {
+        uint64_t currBrushSize  = m_painter.GetBrushSize();
+        cout << "Setting brush size to: " << currBrushSize-1 << endl;
+        m_painter.SetBrushSize(currBrushSize-1);
+    }
     if(event.getKeySym() == "b" && event.keyDown())
     {
-      //  m_segmentator.AutoCompleteLabelling();
-      //  VisualiseLabelledCloud();
+        m_segmentator.AutoCompleteLabelling();
+        VisualiseLabelledCloud();
     }
 
 
     RefreshStateView();    
+}
+
+struct CloudandIndices 
+{ 
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_ptr; 
+        pcl::PointIndices::Ptr point_indicies; 
+
+}; 
+
+
+void BNView::AreaPickingEventHandler(const pcl::visualization::AreaPickingEvent &event, void* cookie)
+{
+    pcl::PointIndices::Ptr selectedPoints = pcl::PointIndices::Ptr(new pcl::PointIndices);
+
+    if(event.getPointsIndices(selectedPoints->indices)!=false)
+    {
+      std::cout << "Found some points in selection" << std::endl;   
+    }
 }
 void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event, void* cookie)
 {
@@ -125,7 +196,15 @@ void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event
     }
     if(event.getKeySym() == "w" && event.keyDown())
     {
-        m_segmentator.WritePointCloudToFile();
+        m_model.WriteLabelledPointCloud();
+    }
+    if(event.getKeySym() == "u" && event.keyDown())
+    {
+        GetNewLabelsKeyPressed();
+    }
+    if(event.getKeySym() == "f" && event.keyDown())
+    {
+        m_model.CallPythonFineTune();
     }
     RefreshStateView();
 }
@@ -136,12 +215,22 @@ void BNView::PointPickingCallbackEventHandler(const pcl::visualization::PointPic
     pcl::PointXYZRGB picked_point;
     event.getPoint(picked_point.x, picked_point.y, picked_point.z);
 
+
     if (m_model.GetState() == "Annotate")
     {
-        m_segmentator.AnnotatePointCluster(picked_point);
-        cout << "Annotation of point cluster done" << endl;
-        m_segmentator.UpdateLabelledPointCloud();
-        cout << "segmented cloud updated" << endl;
+        cout << "Annotation Mode" << endl;
+        //siddhant: Add a condition to choose the annotation method
+        //It could be either be segmentation based or painting based
+        //Or Ideally we should merge it all in one class
+        //For now I am using only painter
+
+        m_painter.PaintNNeighbours(picked_point);
+
+        //m_segmentator.LabelNearestNeighbours(picked_point);
+        //m_segmentator.AnnotatePointCluster(picked_point);
+        //cout << "Annotation of point cluster done" << endl;
+        //m_segmentator.UpdateLabelledPointCloud();
+        //cout << "segmented cloud updated" << endl;
         VisualiseLabelledCloud();
     }    
     if (m_model.GetState() == "Resegment")
@@ -161,12 +250,14 @@ void BNView::PointPickingCallbackEventHandler(const pcl::visualization::PointPic
         VisualiseLabelledCloud();    
     }
 
+
 }
 
 void BNView::RegisterHandlers()
 {
     m_viewer->registerKeyboardCallback(&BNView::KeyboardEventHandler,*this,(void*)NULL);
     m_viewer->registerPointPickingCallback(&BNView::PointPickingCallbackEventHandler,*this,(void*)NULL);
+    m_viewer->registerAreaPickingCallback(&BNView::AreaPickingEventHandler,*this,(void*)NULL);
 }
 void BNView::VisualiseLabelledCloud()
 {

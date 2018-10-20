@@ -3,12 +3,14 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(point_cloud_annotation)
 
 find_package(PCL 1.5 REQUIRED)
+find_package(OpenCV REQUIRED )
 
 set(srcs 
          ../src/BNModel.cpp
  		 ../src/BNView.cpp
  		 ../src/BNSegmentator.cpp
- 		 ../src/BNState.cpp
+ 		 ../src/BNPainter.cpp
+ 		 ../src/BNState.cpp	
  		 ../src/BNLabelStore.cpp
  		 ../src/BNConfigReader.cpp
  		 ../src/BNPointCloudReader.cpp
@@ -19,11 +21,13 @@ set(incs
          "../src/includes/BNModel.h"
  		 "../src//includes/BNView.h"
  		 "../src/includes/BNSegmentator.h"
+ 		 "../src/includes/BNPainter.h"
  		 "../src/includes/common.h"
  		 "../src/includes/BNLabelStore.h"
  		 "../src/includes/BNLabel.h"
  		 "../src/includes/BNConfigReader.h"
  		 "../src/includes/BNPointCloudReader.h"
+ 		 "../third_party/cvui/cvui.h"
          )
 
 set(BN_LIB "bluenotebook")
@@ -35,6 +39,6 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 add_executable (point_cloud_annotation ../src/main.cpp)
-target_link_libraries (point_cloud_annotation ${PCL_LIBRARIES} ${BN_LIB} )
+target_link_libraries (point_cloud_annotation ${PCL_LIBRARIES} ${OpenCV_LIBS} ${BN_LIB} )
 #target_link_libraries (point_cloud_annotation ${PCL_LIBRARIES})
 
