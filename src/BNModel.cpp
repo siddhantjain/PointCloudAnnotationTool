@@ -102,11 +102,13 @@ void BNModel::WriteLabelledPointCloud()
 
 void BNModel::CallPythonFineTune()
 {
+    std::string init_command = "chmod u+x ../src/Python/src/FineTune.py"; 
+    system(init_command.c_str());
     std::string command = "python ../src/Python/src/FineTune.py";
     std::string arg_point_cloud = " --point_cloud_file " + m_config["OutputFileName"];
     std::string arg_num_classes = " --num_classes " + m_config["NumClasses"];
-    std::string arg_model_path = " --model_path /Users/siddhant/Documents/Acads/Spring_2018/capstone/github/PointCloudAnnotationTool/src/Python/trained_models/epoch_80.ckpt";
-    std::string arg_output_dir = " --output_dir /Users/siddhant/Documents/Acads/Spring_2018/capstone/github/PointCloudAnnotationTool/output";
+    std::string arg_model_path = " --model_path /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/src/Python/trained_models/epoch_80.ckpt";
+    std::string arg_output_dir = " --output_dir /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/output";
     std::string arg_num_epochs = " --epoch 80";
     command += arg_point_cloud + arg_num_classes + arg_model_path + arg_output_dir + arg_num_epochs;
     system(command.c_str());

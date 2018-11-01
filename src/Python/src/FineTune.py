@@ -6,9 +6,8 @@ from datetime import datetime
 import json
 import os
 import sys
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(BASE_DIR)
-sys.path.append(os.path.dirname(BASE_DIR))
+
+
 import provider
 import pointnet_part_seg as model
 import ConvertH5 
@@ -23,6 +22,8 @@ label_color_dict = {
 5:[255,255,0],
 6:[255,125,40]
 }
+
+CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 # DEFAULT SETTINGS
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=1, help='GPU to use [default: GPU 0]')
@@ -31,23 +32,30 @@ parser.add_argument('--epoch', type=int, default=80, help='Epoch to run [default
 parser.add_argument('--point_num', type=int, default=3000, help='Point Number [256/512/1024/2048]')
 parser.add_argument('--output_dir', type=str, default='train_results', help='Directory that stores all training logs and trained models')
 parser.add_argument('--wd', type=float, default=0, help='Weight Decay [Default: 0.0]')
-parser.add_argument('--model_path', default='train_results/trained_models/epoch_70.ckpt', help='Model checkpoint path')
+parser.add_argument('--model_path', default='../trained_models/epoch_80.ckpt', help='Model checkpoint path')
 parser.add_argument('--num_classes',default='0', help='Number of classes')
 parser.add_argument('--point_cloud_file',default='notfound.h5', help='Name of the point cloud file which has the training data')
+parser.add_argument('--base_dir',default=CURR_DIR, help="Base directory for finding other paths")
 FLAGS = parser.parse_args()
 
+BASE_DIR = FLAGS.base_dir
+sys.path.append(BASE_DIR)
+sys.path.append(os.path.dirname(BASE_DIR))
 #Convert the point cloud to an H5 file that we can train with
-ConvertH5.convertToH5(FLAGS.point_cloud_file,FLAGS.num_classes)
+point_cloud_file_path_ = os.path.join(BASE_DIR, 'output')
+point_cloud_file_path = os.path.join(point_cloud_file_path_, FLAGS.point_cloud_file)
+ConvertH5.convertToH5(point_cloud_file_path,FLAGS.num_classes)
 
-hdf5_data_dir = os.path.join(BASE_DIR, '../hdf5_data')
+hdf5_data_dir = os.path.join(BASE_DIR, 'src/Python/hdf5_data')
+print(hdf5_data_dir)
 
 # MAIN SCRIPT
 point_num = FLAGS.point_num
 batch_size = FLAGS.batch
 output_dir = FLAGS.output_dir
 pretrained_model_path = FLAGS.model_path
-training_data_file_name = os.path.dirname(FLAGS.point_cloud_file) + "/" + os.path.basename(FLAGS.point_cloud_file).split(".")[0] + '.h5'
-labelled_cloud_file_name = os.path.dirname(FLAGS.point_cloud_file) + "/" + os.path.basename(FLAGS.point_cloud_file).split(".")[0] + '_labelled.txt'
+training_data_file_name = os.path.basename(point_cloud_file_path).split(".")[0] + '.h5'
+labelled_cloud_file_name = os.path.basename(point_cloud_file_path).split(".")[0] + '_labelled.txt'
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
@@ -90,7 +98,7 @@ TRAINING_EPOCHES = FLAGS.epoch
 print('### Training epoch: {0}'.format(TRAINING_EPOCHES))
 
 TRAINING_FILE_LIST = training_data_file_name #"../hdf5_data/train_hdf5_file_list.txt"
-TESTING_FILE_LIST = os.path.join(hdf5_data_dir, 'val_hdf5_file_list.txt')
+TESTING_FILE_LIST = training_data_file_name #os.path.join(hdf5_data_dir, 'val_hdf5_file_list.txt')
 
 MODEL_STORAGE_PATH = os.path.join(output_dir, 'trained_models')
 if not os.path.exists(MODEL_STORAGE_PATH):
@@ -226,8 +234,8 @@ def train():
         #train_file_list = provider.getDataFiles(TRAINING_FILE_LIST)
         train_file_list = [TRAINING_FILE_LIST]
         num_train_file = len(train_file_list)
-        test_file_list = provider.getDataFiles(TESTING_FILE_LIST)
-        num_test_file = len(test_file_list)
+        #test_file_list = provider.getDataFiles(TESTING_FILE_LIST)
+        #num_test_file = len(test_file_list)
 
         fcmd = open(os.path.join(LOG_STORAGE_PATH, 'cmd.txt'), 'w')
         fcmd.write(str(FLAGS))
@@ -240,7 +248,8 @@ def train():
             is_training = True
 
             for i in range(num_train_file):
-                cur_train_filename = os.path.join(hdf5_data_dir, train_file_list[train_file_idx[i]])
+                #cur_train_filename = os.path.join(hdf5_data_dir, train_file_list[train_file_idx[i]])
+                cur_train_filename = os.path.join(point_cloud_file_path_, training_data_file_name)
                 printout(flog, 'Loading train file ' + cur_train_filename)
 
                 cur_data, cur_labels, cur_seg = provider.loadDataFile_with_seg(cur_train_filename)
