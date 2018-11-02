@@ -74,10 +74,32 @@ BNLabelStore& BNModel::GetLabelStore()
     return m_labelStore;
 }
 
+std::string GetFileNameFromPath(std::string filename)
+{
+    const size_t last_slash_idx = filename.find_last_of("\\/");
+    if (std::string::npos != last_slash_idx)
+    {
+        filename.erase(0, last_slash_idx + 1);
+    }
+
+    // Remove extension if present.
+    const size_t period_idx = filename.rfind('.');
+    if (std::string::npos != period_idx)
+    {
+        filename.erase(period_idx);
+    }
+
+    return filename;
+}
+
 void BNModel::WriteLabelledPointCloud()
 {
     cout << "Writing Labelled Point Cloud to File" << endl;
-    std::ofstream pointCloudFile(m_config["OutputFileName"]);
+    std::string outputFileName;
+    std::string pcFileName = GetFileNameFromPath(m_config["PointCloud"]);
+    std::cout << pcFileName << std::endl;
+    outputFileName = "../tmp/" + pcFileName + "_labelled.txt";
+    std::ofstream pointCloudFile(outputFileName);
 
     //Siddhant: Getting existing number of parts to start new labelling from this number
     int lastPartLabel = stoi(m_config["LastPartLabel"]);
@@ -102,27 +124,39 @@ void BNModel::WriteLabelledPointCloud()
 
 void BNModel::CallPythonFineTune()
 {
+    std::string outputFileName;
+    std::string pcFileName = GetFileNameFromPath(m_config["PointCloud"]);
+    std::cout << pcFileName << std::endl;
+    outputFileName = "../tmp/" + pcFileName + "_labelled.txt";
+
     std::string init_command = "chmod u+x ../src/Python/src/FineTune.py"; 
     system(init_command.c_str());
+    
+
     std::string command = "python ../src/Python/src/FineTune.py";
-    std::string arg_point_cloud = " --point_cloud_file " + m_config["OutputFileName"];
+    std::string arg_point_cloud = " --point_cloud_file " + pcFileName + "_labelled.txt";
     std::string arg_num_classes = " --num_classes " + m_config["NumClasses"];
-    std::string arg_model_path = " --model_path /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/src/Python/trained_models/epoch_80.ckpt";
-    std::string arg_output_dir = " --output_dir /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/output";
+    //std::string arg_model_path = " --model_path /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/src/Python/trained_models/epoch_80.ckpt";
+    //std::string arg_output_dir = " --output_dir /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/output";
     std::string arg_num_epochs = " --epoch 80";
-    command += arg_point_cloud + arg_num_classes + arg_model_path + arg_output_dir + arg_num_epochs;
+    command += arg_point_cloud + arg_num_classes + arg_num_epochs;
     system(command.c_str());
 }
 void BNModel::GetNewLabels()
 {
     cout << "Reading new labels" << endl;
     int numPointsRead = 0;
-    std::ifstream pointCloudFile(m_config["PythonOutputFileName"]);
+    std::string outputFileName;
+    std::string pcFileName = GetFileNameFromPath(m_config["PointCloud"]);
+    std::cout << pcFileName << std::endl;
+    outputFileName = "../tmp/finetuned_labels.txt";
+
+    std::ifstream pointCloudFile(outputFileName);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr labelledCloud = m_labelledPointCloud;
     for(int i=0;i<labelledCloud->points.size();i++)
     {
-            float ptX,ptY,ptZ;
-            float ptRed,ptBlue,ptGreen;
+            double ptX,ptY,ptZ;
+            double ptRed,ptBlue,ptGreen;
             pointCloudFile >> ptX >>  ptY >> ptZ >> ptRed >> ptGreen >> ptBlue;
             labelledCloud->points[i].x = ptX;
             labelledCloud->points[i].y = ptY;

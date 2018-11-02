@@ -30,19 +30,18 @@ parser.add_argument('--gpu', type=int, default=1, help='GPU to use [default: GPU
 parser.add_argument('--batch', type=int, default=1, help='Batch Size during training [default: 32]')
 parser.add_argument('--epoch', type=int, default=80, help='Epoch to run [default: 50]')
 parser.add_argument('--point_num', type=int, default=3000, help='Point Number [256/512/1024/2048]')
-parser.add_argument('--output_dir', type=str, default='train_results', help='Directory that stores all training logs and trained models')
 parser.add_argument('--wd', type=float, default=0, help='Weight Decay [Default: 0.0]')
-parser.add_argument('--model_path', default='../trained_models/epoch_80.ckpt', help='Model checkpoint path')
+parser.add_argument('--model_path', default='../../trained_models/epoch_80.ckpt', help='Model checkpoint path')
 parser.add_argument('--num_classes',default='0', help='Number of classes')
 parser.add_argument('--point_cloud_file',default='notfound.h5', help='Name of the point cloud file which has the training data')
 parser.add_argument('--base_dir',default=CURR_DIR, help="Base directory for finding other paths")
 FLAGS = parser.parse_args()
 
-BASE_DIR = FLAGS.base_dir
+BASE_DIR = CURR_DIR + "/../../../"
 sys.path.append(BASE_DIR)
 sys.path.append(os.path.dirname(BASE_DIR))
 #Convert the point cloud to an H5 file that we can train with
-point_cloud_file_path_ = os.path.join(BASE_DIR, 'output')
+point_cloud_file_path_ = os.path.join(BASE_DIR, 'tmp')
 point_cloud_file_path = os.path.join(point_cloud_file_path_, FLAGS.point_cloud_file)
 ConvertH5.convertToH5(point_cloud_file_path,FLAGS.num_classes)
 
@@ -52,10 +51,10 @@ print(hdf5_data_dir)
 # MAIN SCRIPT
 point_num = FLAGS.point_num
 batch_size = FLAGS.batch
-output_dir = FLAGS.output_dir
-pretrained_model_path = FLAGS.model_path
+output_dir = os.path.join(BASE_DIR, 'output')
+pretrained_model_path = os.path.join(BASE_DIR, 'src/Python/trained_models/epoch_70.ckpt')
 training_data_file_name = os.path.basename(point_cloud_file_path).split(".")[0] + '.h5'
-labelled_cloud_file_name = os.path.basename(point_cloud_file_path).split(".")[0] + '_labelled.txt'
+labelled_cloud_file_name = os.path.join(BASE_DIR, 'tmp/finetuned_labels.txt')
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
@@ -286,7 +285,7 @@ def train():
                             feed_dict=feed_dict)
 
                     if epoch_num == TRAINING_EPOCHES-1:
-                        text_file = open(FLAGS.point_cloud_file, "r")
+                        text_file = open(point_cloud_file_path, "r")
                         input = text_file.read().split('\n')
                         l = []
                         for i in range(len(input)):
