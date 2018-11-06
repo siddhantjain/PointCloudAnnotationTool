@@ -34,7 +34,7 @@ void BNPointCloudReader::ReadPointCloud()
     }
     else if(fileExtension=="txt")
     {
-        ReadTxtPointCloud();
+        ReadTxtPointCloud(false);
     }
     else
     {
@@ -51,15 +51,41 @@ void BNPointCloudReader::ReadPCDPointCloud()
         }
 }
 
-void BNPointCloudReader::ReadTxtPointCloud()
+void BNPointCloudReader::ReadTxtPointCloud(bool isXYZRGB)
 {
     //siddhant: current assumption is that all txt point clouds have no color info. Will change this later
     //to include whether pc file has color info or not in the config file and incorporate this as a feature at the class
     //level.
-
     pcl::ASCIIReader ptsReader;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr tempXYZCloud (new pcl::PointCloud<pcl::PointXYZ>);
-    ptsReader.setSepChars(" ");
-    ptsReader.read(m_pointCloudFilePath,*tempXYZCloud);
-    ConvertXYZToXYZRGB(tempXYZCloud,m_pointCloudRef);
+    if(!isXYZRGB)
+    {
+        pcl::PointCloud<pcl::PointXYZ>::Ptr tempXYZCloud (new pcl::PointCloud<pcl::PointXYZ>);
+        ptsReader.setSepChars(" ");
+        ptsReader.read(m_pointCloudFilePath,*tempXYZCloud);
+        ConvertXYZToXYZRGB(tempXYZCloud,m_pointCloudRef);        
+    }
+    else
+    {
+        std::string line;
+        std::ifstream pointCloudFile(m_pointCloudFilePath);
+        int counter = 0;
+        while(std::getline(pointCloudFile, line))
+        {
+            counter++;
+            double ptX,ptY,ptZ;
+            double ptRed,ptBlue,ptGreen;
+            std::istringstream iss(line);
+            iss >> ptX >>  ptY >> ptZ >> ptRed >> ptGreen >> ptBlue;
+            pcl::PointXYZRGB thisPoint;
+            thisPoint.r = uint8_t(ptRed);
+            thisPoint.g = uint8_t(ptGreen);
+            thisPoint.b = uint8_t(ptBlue);
+            thisPoint.x = ptX;
+            thisPoint.y = ptY;
+            thisPoint.z = ptZ;
+            m_pointCloudRef->push_back(thisPoint);
+        }
+        std::cout << "Points read: " << counter << std::endl;
+    }
+
 }
