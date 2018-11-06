@@ -75,5 +75,7 @@ uint64_t BNPainter::GetBrushSize()
 
 void BNPainter::SetBrushSize(uint64_t inBrushSize)
 {
+    inBrushSize = std::fmax(0,inBrushSize);
+    //siddhant: Also add check for total number of points in the point cloud. Brush size can't be greater than that.
     m_brushSize = inBrushSize;
 }
