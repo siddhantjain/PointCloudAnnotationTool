@@ -15,7 +15,7 @@ private:
     std::string m_pointCloudFilePath;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_pointCloudRef;
     void ReadPCDPointCloud();
-    void ReadTxtPointCloud();
+    void ReadTxtPointCloud(bool isXYZRGB);
 };
 
 #endif
