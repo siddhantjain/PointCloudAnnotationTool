@@ -52,7 +52,7 @@ print(hdf5_data_dir)
 point_num = FLAGS.point_num
 batch_size = FLAGS.batch
 output_dir = os.path.join(BASE_DIR, 'output')
-pretrained_model_path = os.path.join(BASE_DIR, 'src/Python/trained_models/epoch_70.ckpt')
+pretrained_model_path = os.path.join(BASE_DIR, 'src/Python/trained_models/base.ckpt')
 training_data_file_name = os.path.basename(point_cloud_file_path).split(".")[0] + '.h5'
 labelled_cloud_file_name = os.path.join(BASE_DIR, 'tmp/finetuned_labels.txt')
 
@@ -447,7 +447,7 @@ def train():
             train_one_epoch(train_file_idx, epoch)
 
             if (epoch+1) % 10 == 0:
-                cp_filename = saver.save(sess, os.path.join(MODEL_STORAGE_PATH, 'epoch_' + str(epoch+1)+'.ckpt'))
+                cp_filename = saver.save(sess, os.path.join(MODEL_STORAGE_PATH, 'base' +'.ckpt'))
                 printout(flog, 'Successfully store the checkpoint model into ' + cp_filename)
 
             flog.flush()
