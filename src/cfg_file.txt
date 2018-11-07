@@ -1,5 +1,5 @@
-PointCloud ../data/points.txt
+PointCloud ../data/chair2.txt
 LastPartLabel 0
 OutputFileName table.txt
-PythonOutputFileName ../output/points_labelled.txt
-NumClasses 6
+PythonOutputFileName ../output/plane1_labelled.txt
+NumClasses 4
