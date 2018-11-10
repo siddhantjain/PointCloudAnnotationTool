@@ -120,7 +120,8 @@ def placeholder_inputs():
     input_label_ph = tf.placeholder(tf.float32, shape=(batch_size, NUM_CATEGORIES))
     labels_ph = tf.placeholder(tf.int32, shape=(batch_size))
     seg_ph = tf.placeholder(tf.int32, shape=(batch_size, point_num))
-    return pointclouds_ph, input_label_ph, labels_ph, seg_ph
+    pairwise_distances_ph = tf.placeholder(tf.float32, shape=(batch_size, point_num*point_num))
+    return pointclouds_ph, input_label_ph, labels_ph, seg_ph, pairwise_distances_ph
 
 def convert_label_to_one_hot(labels):
     label_one_hot = np.zeros((labels.shape[0], NUM_CATEGORIES))
@@ -128,10 +129,19 @@ def convert_label_to_one_hot(labels):
         label_one_hot[idx, labels[idx]] = 1
     return label_one_hot
 
+def calculatePairWiseDistanceEnergies(pointCloud_batch):
+    point1 = np.repeat(pointCloud_batch, pointCloud_batch.shape[1], 1)
+    point2 = np.tile(pointCloud_batch, [1, pointCloud_batch.shape[1], 1])
+    distances = ((point1[:, :, 0] - point2[:, :, 0])**2 + (point1[:, :, 1] - point2[:, :, 1])**2 + (point1[:, :, 2] - point2[:, :, 2])**2)**0.5 
+    sigmas = distances.var(-1)
+    sigmas = np.tile(sigmas, [distances.shape[0], distances.shape[1]])
+    pairwise_distance_energy = np.exp(-1 * np.divide(distances, sigmas))
+    return pairwise_distance_energy
+
 def train():
     with tf.Graph().as_default():
         with tf.device('/gpu:'+str(FLAGS.gpu)):
-            pointclouds_ph, input_label_ph, labels_ph, seg_ph = placeholder_inputs()
+            pointclouds_ph, input_label_ph, labels_ph, seg_ph, pairwise_distances_ph = placeholder_inputs()
             is_training_ph = tf.placeholder(tf.bool, shape=())
 
             batch = tf.Variable(0, trainable=False)
@@ -166,7 +176,7 @@ def train():
             # In model.get_loss, we define the total loss to be weighted sum of the classification and segmentation losses.
             # Here, we only train for segmentation network. Thus, we set weight to be 1.0.
             loss, label_loss, per_instance_label_loss, seg_loss, per_instance_seg_loss, per_instance_seg_pred_res, debug_pred, debug_label \
-                = model.get_loss_finetune(labels_pred, seg_pred, labels_ph, seg_ph, 1.0, end_points)
+                = model.get_loss_finetune(labels_pred, seg_pred, labels_ph, seg_ph, 1.0, end_points, pairwise_distances_ph)
 
             total_training_loss_ph = tf.placeholder(tf.float32, shape=())
             total_testing_loss_ph = tf.placeholder(tf.float32, shape=())
@@ -269,13 +279,14 @@ def train():
                 for j in range(num_batch):
                     begidx = j * batch_size
                     endidx = (j + 1) * batch_size
-
+                    calc_pairwise_distance = calculatePairWiseDistanceEnergies(cur_data[begidx: endidx, ...])
                     feed_dict = {
                             pointclouds_ph: cur_data[begidx: endidx, ...], 
                             labels_ph: cur_labels[begidx: endidx, ...], 
                             input_label_ph: cur_labels_one_hot[begidx: endidx, ...], 
                             seg_ph: cur_seg[begidx: endidx, ...],
-                            is_training_ph: is_training, 
+                            is_training_ph: is_training,
+                            pairwise_distances_ph: calc_pairwise_distance 
                             }
 
                     _, loss_val, label_loss_val, seg_loss_val, per_instance_label_loss_val, \
