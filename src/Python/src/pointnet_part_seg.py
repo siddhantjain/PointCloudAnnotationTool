@@ -169,11 +169,33 @@ def get_loss(l_pred, seg_pred, label, seg, weight, end_points):
     return total_loss, label_loss, per_instance_label_loss, seg_loss, per_instance_seg_loss, per_instance_seg_pred_res
 
 
-def get_loss_finetune(l_pred, seg_pred, label, seg, weight, end_points):
+def get_loss_finetune(l_pred, seg_pred, label, seg, weight, end_points, pairwise_distances):
 
     per_instance_label_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=l_pred, labels=label)
     label_loss = tf.reduce_mean(per_instance_label_loss)
 
+    #Smoothening loss
+    #KL divergence is computed as plogp - plogq
+    #batch_size X point_num X part_seg_classes
+    softmax_seg_pred = tf.nn.softmax(seg_pred, -1)
+    softmax_seg_pred = tf.Print(softmax_seg_pred,[softmax_seg_pred],message = 'softmax_seg_pred')
+    p = tf.tile(tf.expand_dims(softmax_seg_pred, 2), [1, 1, softmax_seg_pred.shape[1], 1])
+    p = tf.reshape(p, [softmax_seg_pred.shape[0], softmax_seg_pred.shape[1] * softmax_seg_pred.shape[1], -1])
+    logp = tf.log(p)
+    plogp = tf.multiply(p, logp)
+    q = tf.tile(softmax_seg_pred, [1, softmax_seg_pred.shape[1], 1])
+    logq = tf.log(q)
+    plogq = tf.multiply(p, logq)
+    KL_divergence = tf.subtract(plogp, plogq)
+    pairwise_KL_divergence = tf.reduce_sum(KL_divergence, -1)
+    pairwise_KL_divergence = tf.Print(pairwise_KL_divergence, [pairwise_KL_divergence], message='pairwise_KL_divergence')
+    pairwise_distances = tf.Print(pairwise_distances, [pairwise_distances], message='pairwise_distances')
+    per_instance_smooth_loss = tf.multiply(pairwise_KL_divergence, pairwise_distances)
+    per_instance_smooth_loss = tf.reduce_sum(per_instance_smooth_loss, -1)
+    per_instance_smooth_loss = tf.Print(per_instance_smooth_loss, [per_instance_smooth_loss], message='per_instance_smooth_loss')
+    smooth_loss = tf.reduce_mean(per_instance_smooth_loss)
+    smooth_loss = tf.Print(smooth_loss, [smooth_loss], message='smooth_loss')
+    
     # size of seg_pred is batch_size x point_num x part_cat_num
     # size of seg is batch_size x point_num
     # Only keep those segmentations for which the ground truth label is not -1 and not unlabelled to compute loss
@@ -186,9 +208,11 @@ def get_loss_finetune(l_pred, seg_pred, label, seg, weight, end_points):
 
     seg_pred_one_shot = tf.boolean_mask(predictions_squeezed, loc)
     seg_one_shot = tf.boolean_mask(labels_squeezed, loc)
-    seg_one_shot = tf.Print(seg_one_shot,[seg_pred_one_shot])
+    seg_one_shot = tf.Print(seg_one_shot,[seg_pred_one_shot], message='seg_one_shot')
     seg_pred = tf.expand_dims(seg_pred_one_shot, axis=0)
     seg = tf.expand_dims(seg_one_shot, axis=0)
+
+
 
     seg_pred_debug = seg_pred
     seg_debug = seg
@@ -206,6 +230,6 @@ def get_loss_finetune(l_pred, seg_pred, label, seg, weight, end_points):
     mat_diff = tf.matmul(transform, tf.transpose(transform, perm=[0, 2, 1])) - tf.constant(np.eye(K), dtype=tf.float32)
     mat_diff_loss = tf.nn.l2_loss(mat_diff)
 
-    total_loss = weight * seg_loss + (1 - weight) * label_loss + mat_diff_loss * 1e-3
+    total_loss = weight * (seg_loss + smooth_loss * 1e-7) + (1 - weight) * label_loss + mat_diff_loss * 1e-3
 
     return total_loss, label_loss, per_instance_label_loss, seg_loss, per_instance_seg_loss, per_instance_seg_pred_res, seg_pred_debug, seg_debug
