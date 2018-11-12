@@ -38,3 +38,4 @@
 build/
 data/
 output/
+src/Python/trained_models

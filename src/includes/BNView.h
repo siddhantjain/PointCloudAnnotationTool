@@ -25,4 +25,6 @@ private:
     boost::shared_ptr<pcl::visualization::PCLVisualizer> m_viewer;
     void WritePointCloudToFile();
     void GetNewLabelsKeyPressed();
+    //siddhant: This is temporary for debugging
+    int num_annotation_clicks;
 };

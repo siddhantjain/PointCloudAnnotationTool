@@ -137,11 +137,11 @@ void BNModel::CallPythonFineTune()
     std::string arg_point_cloud = " --point_cloud_file " + pcFileName + "_labelled.txt";
     std::string arg_num_classes = " --num_classes " + m_config["NumClasses"];
     std::string arg_num_points = " --point_num " + std::to_string(m_labelledPointCloud->size());
-    std::cout << "arg_num_points: " << arg_num_points << std::endl; 
+    std::string arg_model_prefix = " --model_prefix " + m_config["PreTrainedModelPrefix"]; 
     //std::string arg_model_path = " --model_path /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/src/Python/trained_models/epoch_80.ckpt";
     //std::string arg_output_dir = " --output_dir /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/output";
     std::string arg_num_epochs = " --epoch 80";
-    command += arg_point_cloud + arg_num_classes + arg_num_epochs + arg_num_points;
+    command += arg_point_cloud + arg_num_classes + arg_num_epochs + arg_num_points + arg_model_prefix;
     std::cout << "Executing command: " << command << std::endl; 
     system(command.c_str());
 }
@@ -167,7 +167,6 @@ void BNModel::GetNewLabels()
             labelledCloud->points[i].r = ptRed;
             labelledCloud->points[i].g = ptGreen;
             labelledCloud->points[i].b = ptBlue;
-            cout << " " << ptX << " " << ptY << " " << ptZ << " " << ptRed << endl ;
             numPointsRead++;
     }
     cout << "Read: " << numPointsRead << " point " << endl;

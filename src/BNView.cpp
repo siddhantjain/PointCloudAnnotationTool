@@ -11,6 +11,7 @@ m_model(inModel),
 m_segmentator(inSegmentator),
 m_painter(inPainter)
 {
+    num_annotation_clicks = 0;
     std::cout << "View Created" << std::endl;
 }
 
@@ -139,8 +140,9 @@ void BNView::AnnotationModeKeyEventHandler(const pcl::visualization::KeyboardEve
     if (event.getKeySym() == "bracketleft")
     {
         uint64_t currBrushSize  = m_painter.GetBrushSize();
-        cout << "Setting brush size to: " << currBrushSize-1 << endl;
-        m_painter.SetBrushSize(currBrushSize-1);
+        currBrushSize = currBrushSize == 0 ? 0 : currBrushSize-1;
+        cout << "Setting brush size to: " << currBrushSize << endl;
+        m_painter.SetBrushSize(currBrushSize);
     }
     if(event.getKeySym() == "b" && event.keyDown())
     {
@@ -218,12 +220,13 @@ void BNView::PointPickingCallbackEventHandler(const pcl::visualization::PointPic
 
     if (m_model.GetState() == "Annotate")
     {
-        cout << "Annotation Mode" << endl;
+        std::cout << "Annotation Mode" << std::endl;
         //siddhant: Add a condition to choose the annotation method
         //It could be either be segmentation based or painting based
         //Or Ideally we should merge it all in one class
         //For now I am using only painter
-
+        num_annotation_clicks++;
+        std::cout << "Num of annotation clicks: " << num_annotation_clicks << std::endl;
         m_painter.PaintNNeighbours(picked_point);
 
         //m_segmentator.LabelNearestNeighbours(picked_point);

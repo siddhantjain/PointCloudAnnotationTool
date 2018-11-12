@@ -35,6 +35,7 @@ parser.add_argument('--model_path', default='../../trained_models/epoch_80.ckpt'
 parser.add_argument('--num_classes',default='0', help='Number of classes')
 parser.add_argument('--point_cloud_file',default='notfound.h5', help='Name of the point cloud file which has the training data')
 parser.add_argument('--base_dir',default=CURR_DIR, help="Base directory for finding other paths")
+parser.add_argument('--model_prefix',default="",help="prefix for pretrained model to be used for training")
 FLAGS = parser.parse_args()
 
 BASE_DIR = CURR_DIR + "/../../../"
@@ -52,7 +53,13 @@ print(hdf5_data_dir)
 point_num = FLAGS.point_num
 batch_size = FLAGS.batch
 output_dir = os.path.join(BASE_DIR, 'output')
-pretrained_model_path = os.path.join(BASE_DIR, 'src/Python/trained_models/base.ckpt')
+
+prefixed_model_path = 'src/Python/trained_models/base_' + FLAGS.model_prefix + '.ckpt'
+if os.path.exists(os.path.join(BASE_DIR, prefixed_model_path)):
+    pretrained_model_path = os.path.join(BASE_DIR, prefixed_model_path)
+else:
+    pretrained_model_path = os.path.join(BASE_DIR, 'src/Python/trained_models/base.ckpt')
+
 training_data_file_name = os.path.basename(point_cloud_file_path).split(".")[0] + '.h5'
 labelled_cloud_file_name = os.path.join(BASE_DIR, 'tmp/finetuned_labels.txt')
 
@@ -99,7 +106,7 @@ print('### Training epoch: {0}'.format(TRAINING_EPOCHES))
 TRAINING_FILE_LIST = training_data_file_name #"../hdf5_data/train_hdf5_file_list.txt"
 TESTING_FILE_LIST = training_data_file_name #os.path.join(hdf5_data_dir, 'val_hdf5_file_list.txt')
 
-MODEL_STORAGE_PATH = os.path.join(output_dir, 'trained_models')
+MODEL_STORAGE_PATH = os.path.join(BASE_DIR, 'src/Python/trained_models')
 if not os.path.exists(MODEL_STORAGE_PATH):
     os.mkdir(MODEL_STORAGE_PATH)
 
@@ -447,7 +454,7 @@ def train():
             train_one_epoch(train_file_idx, epoch)
 
             if (epoch+1) % 10 == 0:
-                cp_filename = saver.save(sess, os.path.join(MODEL_STORAGE_PATH, 'base' +'.ckpt'))
+                cp_filename = saver.save(sess, os.path.join(MODEL_STORAGE_PATH, 'base_' + FLAGS.model_prefix + '.ckpt'))
                 printout(flog, 'Successfully store the checkpoint model into ' + cp_filename)
 
             flog.flush()
