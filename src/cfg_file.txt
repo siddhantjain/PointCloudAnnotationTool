@@ -1,5 +1,5 @@
-PointCloud ../data/chair2.txt
+PointCloud ../data/plane2.txt
 LastPartLabel 0
-OutputFileName table.txt
-PythonOutputFileName ../output/plane1_labelled.txt
-NumClasses 4
+PreTrainedModelPrefix plane
+PythonOutputFileName ../output/plane2_labelled.txt
+NumClasses 6
