@@ -21,10 +21,10 @@ public:
     int GetAnnotationClass();
     void SetAnnotationClass(int inClass);
     BNLabelStore& GetLabelStore();
-    void WriteLabelledPointCloud();
+    void WriteLabelledPointCloud(bool writeAllPoints=false);
     void GetNewLabels();
     std::vector<bool> isHumanAnnotated;
-    void CallPythonFineTune();
+    void CallPythonFineTune(bool updateModel=false);
 private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_pointCloud;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_labelledPointCloud;

@@ -92,7 +92,7 @@ std::string GetFileNameFromPath(std::string filename)
     return filename;
 }
 
-void BNModel::WriteLabelledPointCloud()
+void BNModel::WriteLabelledPointCloud(bool writeAllPoints)
 {
     cout << "Writing Labelled Point Cloud to File" << endl;
     std::string outputFileName;
@@ -114,7 +114,7 @@ void BNModel::WriteLabelledPointCloud()
             float ptZ = labelledCloud->points[i].z;
             int label = m_labelStore.GetLabelForColor(labelledCloud->points[i].r,labelledCloud->points[i].g,labelledCloud->points[i].b);
             label = label-1 + lastPartLabel; 
-            if(!isHumanAnnotated[i])
+            if(!isHumanAnnotated[i] && !writeAllPoints)
                 label = -1;
             pointCloudFile << ptX << " " << ptY << " " << ptZ << " " << label << endl;
             numPointsWritten++;
@@ -122,8 +122,12 @@ void BNModel::WriteLabelledPointCloud()
     cout << "numPointsWritten: " << numPointsWritten << endl;
 }
 
-void BNModel::CallPythonFineTune()
+void BNModel::CallPythonFineTune(bool updateModel)
 {
+    if(updateModel)
+    {
+        WriteLabelledPointCloud(true);
+    }  
     std::string outputFileName;
     std::string pcFileName = GetFileNameFromPath(m_config["PointCloud"]);
     std::cout << pcFileName << std::endl;
@@ -141,7 +145,8 @@ void BNModel::CallPythonFineTune()
     //std::string arg_model_path = " --model_path /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/src/Python/trained_models/epoch_80.ckpt";
     //std::string arg_output_dir = " --output_dir /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/output";
     std::string arg_num_epochs = " --epoch 80";
-    command += arg_point_cloud + arg_num_classes + arg_num_epochs + arg_num_points + arg_model_prefix;
+    std::string arg_update_model = " --update_model " + (updateModel ? std::to_string(1) : std::to_string(0));
+    command += arg_point_cloud + arg_num_classes + arg_num_epochs + arg_num_points + arg_model_prefix + arg_update_model;
     std::cout << "Executing command: " << command << std::endl; 
     system(command.c_str());
 }

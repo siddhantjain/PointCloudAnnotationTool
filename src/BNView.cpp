@@ -200,6 +200,10 @@ void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event
     {
         m_model.WriteLabelledPointCloud();
     }
+    if(event.getKeySym() == "t" && event.keyDown())
+    {
+        m_model.CallPythonFineTune(true);
+    }
     if(event.getKeySym() == "u" && event.keyDown())
     {
         GetNewLabelsKeyPressed();

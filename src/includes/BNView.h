@@ -23,7 +23,7 @@ private:
     BNSegmentator& m_segmentator;
     BNPainter& m_painter;
     boost::shared_ptr<pcl::visualization::PCLVisualizer> m_viewer;
-    void WritePointCloudToFile();
+    void WritePointCloudToFile(bool writeAllPoints=false);
     void GetNewLabelsKeyPressed();
     //siddhant: This is temporary for debugging
     int num_annotation_clicks;

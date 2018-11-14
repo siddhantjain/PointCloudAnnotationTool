@@ -36,6 +36,8 @@ parser.add_argument('--num_classes',default='0', help='Number of classes')
 parser.add_argument('--point_cloud_file',default='notfound.h5', help='Name of the point cloud file which has the training data')
 parser.add_argument('--base_dir',default=CURR_DIR, help="Base directory for finding other paths")
 parser.add_argument('--model_prefix',default="",help="prefix for pretrained model to be used for training")
+parser.add_argument('--update_model',type=int,default=0, help='Wether we should update the model')
+
 FLAGS = parser.parse_args()
 
 BASE_DIR = CURR_DIR + "/../../../"
@@ -463,12 +465,16 @@ def train():
             np.random.shuffle(train_file_idx)
 
             train_one_epoch(train_file_idx, epoch)
-
+            '''
             if (epoch+1) % 10 == 0:
                 cp_filename = saver.save(sess, os.path.join(MODEL_STORAGE_PATH, 'base_' + FLAGS.model_prefix + '.ckpt'))
                 printout(flog, 'Successfully store the checkpoint model into ' + cp_filename)
-
+            '''
             flog.flush()
+
+        if FLAGS.update_model:
+            cp_filename = saver.save(sess, os.path.join(MODEL_STORAGE_PATH, 'base_' + FLAGS.model_prefix + '.ckpt'))
+            printout(flog, 'Successfully store the checkpoint model into ' + cp_filename)
 
         flog.close()
 
