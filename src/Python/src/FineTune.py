@@ -36,9 +36,12 @@ parser.add_argument('--num_classes',default='0', help='Number of classes')
 parser.add_argument('--point_cloud_file',default='notfound.h5', help='Name of the point cloud file which has the training data')
 parser.add_argument('--base_dir',default=CURR_DIR, help="Base directory for finding other paths")
 parser.add_argument('--model_prefix',default="",help="prefix for pretrained model to be used for training")
-parser.add_argument('--update_model',type=int,default=0, help='Wether we should update the model')
+parser.add_argument('--update_model',type=int,default=1, help='Wether we should update the model')
 
 FLAGS = parser.parse_args()
+
+print("Update model output ")
+print(FLAGS.update_model)
 
 BASE_DIR = CURR_DIR + "/../../../"
 sys.path.append(BASE_DIR)
@@ -56,11 +59,14 @@ point_num = FLAGS.point_num
 batch_size = FLAGS.batch
 output_dir = os.path.join(BASE_DIR, 'output')
 
+initialize_last_layer = False
 prefixed_model_path = 'src/Python/trained_models/base_' + FLAGS.model_prefix + '.ckpt'
+print("prefixed_model_path is " + prefixed_model_path)
 if os.path.exists(os.path.join(BASE_DIR, prefixed_model_path)):
     pretrained_model_path = os.path.join(BASE_DIR, prefixed_model_path)
 else:
     pretrained_model_path = os.path.join(BASE_DIR, 'src/Python/trained_models/base.ckpt')
+    initialize_last_layer = True
 
 training_data_file_name = os.path.basename(point_cloud_file_path).split(".")[0] + '.h5'
 labelled_cloud_file_name = os.path.join(BASE_DIR, 'tmp/finetuned_labels.txt')
@@ -228,13 +234,18 @@ def train():
 
 
         variables = tf.contrib.framework.get_variables_to_restore()
-        #variables_to_restore = [variables[0]]
-        indices_to_take = range(121)
-        indices_to_take.append(range(123,289))
-        variables_to_restore = variables[0:121]
-        next_set_variables_to_restore = variables[123:289]
-        variables_to_restore.extend(next_set_variables_to_restore)
-        
+        print('Number of output variables for last layer {0}'.format(variables[121].shape[3]))
+        if NUM_PART_CATS == variables[121].shape[3] and initialize_last_layer == False:
+            print("Not setting the last layers weights to random weights")
+            variables_to_restore = variables
+        else:
+            print("Loading all the weights except last layer weights")
+            #variables_to_restore = [variables[0]]
+            indices_to_take = range(121)
+            indices_to_take.append(range(123,289))
+            variables_to_restore = variables[0:121]
+            next_set_variables_to_restore = variables[123:289]
+            variables_to_restore.extend(next_set_variables_to_restore)
         saver = tf.train.Saver(variables_to_restore)
 
         # saver = tf.train.Saver()

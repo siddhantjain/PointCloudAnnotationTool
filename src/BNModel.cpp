@@ -146,7 +146,7 @@ void BNModel::CallPythonFineTune(bool updateModel)
     //std::string arg_output_dir = " --output_dir /Users/sowmya/Desktop/Capstone/code/github/main/PointCloudAnnotationTool/output";
     std::string arg_num_epochs = " --epoch 80";
     std::string arg_update_model = " --update_model " + (updateModel ? std::to_string(1) : std::to_string(0));
-    command += arg_point_cloud + arg_num_classes + arg_num_epochs + arg_num_points + arg_model_prefix + arg_update_model;
+    command += arg_point_cloud + arg_num_classes + arg_num_epochs + arg_num_points + arg_model_prefix;
     std::cout << "Executing command: " << command << std::endl; 
     system(command.c_str());
 }
