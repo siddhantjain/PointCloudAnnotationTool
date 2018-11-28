@@ -140,7 +140,7 @@ void BNView::AnnotationModeKeyEventHandler(const pcl::visualization::KeyboardEve
     if (event.getKeySym() == "bracketleft")
     {
         uint64_t currBrushSize  = m_painter.GetBrushSize();
-        currBrushSize = currBrushSize == 0 ? 0 : currBrushSize-1;
+        currBrushSize = currBrushSize == 1 ? 1 : currBrushSize-1;
         cout << "Setting brush size to: " << currBrushSize << endl;
         m_painter.SetBrushSize(currBrushSize);
     }
