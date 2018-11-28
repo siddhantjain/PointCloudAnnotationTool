@@ -229,7 +229,8 @@ def get_loss_finetune(l_pred, seg_pred, label, seg, weight, end_points, pairwise
     K = transform.get_shape()[1].value
     mat_diff = tf.matmul(transform, tf.transpose(transform, perm=[0, 2, 1])) - tf.constant(np.eye(K), dtype=tf.float32)
     mat_diff_loss = tf.nn.l2_loss(mat_diff)
-
-    total_loss = weight * (seg_loss + smooth_loss * 1e-5) + (1 - weight) * label_loss + mat_diff_loss * 1e-3
+    seg_weight = 1e-5
+    #seg_weight = 0
+    total_loss = weight * (seg_loss + smooth_loss * seg_weight) + (1 - weight) * label_loss + mat_diff_loss * 1e-3
 
     return total_loss, label_loss, per_instance_label_loss, seg_loss, per_instance_seg_loss, per_instance_seg_pred_res, seg_pred_debug, seg_debug
