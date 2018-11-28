@@ -4,12 +4,12 @@ BNLabelStore::BNLabelStore()
 {
 	//eventually read from a file/csv. For now, simply put all information here
 	addLabel(0,"unlabelled",255,255,255);
-	addLabel(1,"book",255,0,0);
-	addLabel(2,"table",0,255,0);
-	addLabel(3,"mug",20,10,255);
-	addLabel(4,"carton",0,255,255);
-	addLabel(5,"bottle",255,255,0);
-	addLabel(6,"bowl",255,125,40);
+	addLabel(1,"class1",255,0,0);
+	addLabel(2,"class2",0,255,0);
+	addLabel(3,"class3",20,10,255);
+	addLabel(4,"class4",0,255,255);
+	addLabel(5,"class5",255,255,0);
+	addLabel(6,"class6",255,125,40);
 }
 
 void BNLabelStore::addLabel(uint labelID,std::string labelName, uint red, uint green, uint blue)
