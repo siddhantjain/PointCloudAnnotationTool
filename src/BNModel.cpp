@@ -98,7 +98,7 @@ void BNModel::WriteLabelledPointCloud(bool writeAllPoints)
     std::string outputFileName;
     std::string pcFileName = GetFileNameFromPath(m_config["PointCloud"]);
     std::cout << pcFileName << std::endl;
-    outputFileName = "../tmp/" + pcFileName + "_labelled.txt";
+    outputFileName = "../reconstruct/" + pcFileName + ".txt";
     std::ofstream pointCloudFile(outputFileName);
 
     //Siddhant: Getting existing number of parts to start new labelling from this number
@@ -116,7 +116,7 @@ void BNModel::WriteLabelledPointCloud(bool writeAllPoints)
             label = label-1 + lastPartLabel; 
             if(!isHumanAnnotated[i] && !writeAllPoints)
                 label = -1;
-            pointCloudFile << ptX << " " << ptY << " " << ptZ << " " << label << endl;
+            pointCloudFile << ptX << " " << ptY << " " << ptZ << endl;
             numPointsWritten++;
     }
     cout << "numPointsWritten: " << numPointsWritten << endl;

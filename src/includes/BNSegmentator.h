@@ -2,8 +2,13 @@
 #include "BNModel.h"
 #include "BNLabelStore.h"
 #include <pcl/search/search.h>
-
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/region_growing_rgb.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/filters/voxel_grid.h>
 
 #ifndef BN_SEGMENTATOR_H
 #define BN_SEGMENTATOR_H
@@ -20,6 +25,7 @@ public:
     void UpdateLabelledPointCloud();
     void WritePointCloudToFile();
     void UpdateNormalBasedSegmentatorParams(double smoothnessThreshold, double curvatureThreshold);
+    void RemoveDominantPlane();
 private:
 	void InitSegmentator();
 	void SegmentPointCloud();
@@ -31,6 +37,7 @@ private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_pointCloud;
     BNModel& m_model;
     std::vector <pcl::PointIndices> m_clusters;
+    pcl::SACSegmentation<pcl::PointXYZRGB> m_planeSegmentator;
     pcl::RegionGrowingRGB<pcl::PointXYZRGB> m_regionGrowingSegmentatorRGB;
     pcl::RegionGrowing<pcl::PointXYZRGB,  pcl::Normal> m_regionGrowingSegmentatorN;
     pcl::MinCutSegmentation<pcl::PointXYZRGB> m_minCutSegmentator;

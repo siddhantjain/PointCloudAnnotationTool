@@ -1,5 +1,6 @@
 #include "common.h"
 #include <pcl/io/ascii_io.h>
+#include <pcl/io/ply_io.h>
 #include <fstream>
 #ifndef BN_POINT_CLOUD_READER_H
 #define BN_POINT_CLOUD_READER_H
@@ -16,6 +17,7 @@ private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_pointCloudRef;
     void ReadPCDPointCloud();
     void ReadTxtPointCloud(bool isXYZRGB);
+    void ReadPlyPointCloud();
 };
 
 #endif

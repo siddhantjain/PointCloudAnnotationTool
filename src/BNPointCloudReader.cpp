@@ -36,12 +36,26 @@ void BNPointCloudReader::ReadPointCloud()
     {
         ReadTxtPointCloud(false);
     }
+    else if (fileExtension=="ply")
+    {
+        ReadPlyPointCloud();
+    }
     else
     {
         std::cout << "Unidentified point cloud extension: " << fileExtension << " reading failed" << std::endl;
     }
 }
 
+void BNPointCloudReader::ReadPlyPointCloud()
+{
+    pcl::PointCloud<pcl::PointXYZ>::Ptr tempXYZCloud (new pcl::PointCloud<pcl::PointXYZ>);
+    if ( pcl::io::loadPLYFile <pcl::PointXYZ> (m_pointCloudFilePath, *tempXYZCloud) == -1)
+        { 
+            std::cout << "Cloud reading failed." << std::endl;
+            return;
+        }
+    ConvertXYZToXYZRGB(tempXYZCloud,m_pointCloudRef);   
+}
 void BNPointCloudReader::ReadPCDPointCloud()
 {
     if ( pcl::io::loadPCDFile <pcl::PointXYZRGB> (m_pointCloudFilePath, *m_pointCloudRef) == -1)

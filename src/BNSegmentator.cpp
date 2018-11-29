@@ -27,8 +27,42 @@ m_prgConfig(prg_config)
     //initialise cluster map based on classes stored in the model
 }
 
+void BNSegmentator::RemoveDominantPlane()
+{
+    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+    pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+
+    m_planeSegmentator.segment (*inliers, *coefficients);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr labelledCloud = m_model.GetLabelledPointCloud();
+    pcl::ExtractIndices<pcl::PointXYZRGB> extract;
+
+    extract.setInputCloud(labelledCloud);
+    extract.setIndices(inliers);
+    extract.setNegative(true);
+    extract.filter(*labelledCloud);
+
+    pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
+    sor.setInputCloud (labelledCloud);
+    sor.setMeanK (500);
+    sor.setStddevMulThresh (1.0);
+    sor.filter (*labelledCloud);
+
+    pcl::VoxelGrid<pcl::PointXYZRGB> sor2;
+    sor2.setInputCloud (labelledCloud);
+    sor2.setLeafSize (0.025f, 0.025f, 0.025f);
+    sor2.filter (*labelledCloud);
+
+    std::cout << "Point Cloud Size: " << labelledCloud->points.size() << std::endl;
+
+
+}
 void BNSegmentator::InitSegmentator()
 {
+    m_planeSegmentator.setModelType (pcl::SACMODEL_PLANE);
+    m_planeSegmentator.setMethodType (pcl::SAC_RANSAC);
+    m_planeSegmentator.setDistanceThreshold (0.01);
+    m_planeSegmentator.setInputCloud (m_model.GetRawPointCloud());
+    return;
     signal(SIGSEGV, crashHandler); 
     signal(SIGABRT, crashHandler);
     //siddhant: Check if we really need this indices business? 
@@ -89,7 +123,7 @@ void BNSegmentator::InitSegmentator()
     m_euclideanSegmentator.setSearchMethod (tree);
     
 
-
+    
 
 
     SegmentPointCloud();

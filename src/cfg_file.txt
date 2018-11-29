@@ -1,5 +1,5 @@
-PointCloud ../data/chair2.txt
+PointCloud ../reconstruct/chair1.txt
 LastPartLabel 0
 PreTrainedModelPrefix chair
-PythonOutputFileName ../output/chair2_labelled.txt
-NumClasses 6
+PythonOutputFileName ../output/chair3_labelled.txt
+NumClasses 3

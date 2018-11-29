@@ -180,7 +180,12 @@ void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event
         AnnotationModeKeyEventHandler(event);
         return;
     }
-
+    if (event.getKeySym () == "p" && event.keyDown ())
+    {   
+        m_model.SetState("PlaneSegmentation");
+        m_segmentator.RemoveDominantPlane();
+        VisualiseLabelledCloud();
+    }
     if (event.getKeySym () == "a" && event.keyDown ())
     {   
         m_model.SetState("Annotate");
@@ -198,7 +203,7 @@ void BNView::KeyboardEventHandler(const pcl::visualization::KeyboardEvent &event
     }
     if(event.getKeySym() == "w" && event.keyDown())
     {
-        m_model.WriteLabelledPointCloud();
+        m_model.WriteLabelledPointCloud(true);
     }
     if(event.getKeySym() == "t" && event.keyDown())
     {
