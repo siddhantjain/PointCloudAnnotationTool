@@ -54,5 +54,7 @@ In order to activate the finetuning workflow, you need to make sure you ran the 
 
 That's about all I wanted to document for now. Please consider the following resources for more information:
 
-1. Project website: [https://mscvprojects.ri.cmu.edu/2018team10/]
-2. Leaving an issue here
+1. Project website: (https://mscvprojects.ri.cmu.edu/2018team10/)
+2. Project report: (https://github.com/siddhantjain/PointCloudAnnotationTool/blob/master/FinalReport.pdf) 
+3. Leaving an issue here
+ 
